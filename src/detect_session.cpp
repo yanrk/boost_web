@@ -43,7 +43,7 @@ void DetectSession::on_detect(boost::system::error_code ec, boost::tribool resul
 
     if (result)
     {
-        if (0 == (support_protocol_t::protocol_ssl & m_protocol))
+        if (0x0 == (support_protocol_t::protocol_ssl & m_protocol))
         {
             m_service->on_error("detector", "detect", 1, "not support ssl protocol");
         }
@@ -54,7 +54,7 @@ void DetectSession::on_detect(boost::system::error_code ec, boost::tribool resul
     }
     else
     {
-        if (0 == (support_protocol_t::protocol_plain & m_protocol))
+        if (0x0 == (support_protocol_t::protocol_plain & m_protocol))
         {
             m_service->on_error("detector", "detect", 1, "not support plain protocol");
         }

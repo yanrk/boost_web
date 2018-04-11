@@ -227,9 +227,9 @@ void HttpSessionBase<Derived>::on_recv(boost::system::error_code ec)
 
     if (boost::beast::websocket::is_upgrade(m_request))
     {
-        if (0 == ((support_protocol_t::protocol_ws | support_protocol_t::protocol_wss) & (derived().max_support_protocol() & m_protocol)))
+        if (0x0 == ((support_protocol_t::protocol_ws | support_protocol_t::protocol_wss) & (derived().max_support_protocol() & m_protocol)))
         {
-            m_service->on_error(derived().protocol(), "recv", 1, (0 != (support_protocol_t::protocol_wss & derived().max_support_protocol()) ? "not support wss protocol" : "not support ws protocol"));
+            m_service->on_error(derived().protocol(), "recv", 1, (0x0 != (support_protocol_t::protocol_wss & derived().max_support_protocol()) ? "not support wss protocol" : "not support ws protocol"));
         }
         else
         {
@@ -238,9 +238,9 @@ void HttpSessionBase<Derived>::on_recv(boost::system::error_code ec)
         return;
     }
 
-    if (0 == ((support_protocol_t::protocol_http | support_protocol_t::protocol_https) & (derived().max_support_protocol() & m_protocol)))
+    if (0x0 == ((support_protocol_t::protocol_http | support_protocol_t::protocol_https) & (derived().max_support_protocol() & m_protocol)))
     {
-        m_service->on_error(derived().protocol(), "recv", 1, (0 != (support_protocol_t::protocol_https & derived().max_support_protocol()) ? "not support https protocol" : "not support http protocol"));
+        m_service->on_error(derived().protocol(), "recv", 1, (0x0 != (support_protocol_t::protocol_https & derived().max_support_protocol()) ? "not support https protocol" : "not support http protocol"));
         return;
     }
 

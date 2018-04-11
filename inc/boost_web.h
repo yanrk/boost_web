@@ -219,7 +219,7 @@ struct ServiceNode
     unsigned short   port;
     const char     * root;
     std::size_t      timeout;
-    unsigned short   protocol;
+    unsigned char    protocol;
 };
 
 class WebManagerImpl;

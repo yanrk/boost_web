@@ -50,7 +50,7 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
 
     m_web_service = web_service;
 
-    unsigned short unsupported_protocols = support_protocol_t::protocol_ssl;
+    unsigned char unsupported_protocols = support_protocol_t::protocol_ssl;
     if (nullptr != crt_file_or_buffer && nullptr != key_file_or_buffer)
     {
         m_ssl_context.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::no_sslv2);
@@ -77,7 +77,7 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
             m_web_service->on_error("ssl", "file", 1, ex.what());
             return (false);
         }
-        unsupported_protocols = 0;
+        unsupported_protocols = 0x0;
     }
 
     thread_count = std::max<std::size_t>(service_count, thread_count);
