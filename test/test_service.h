@@ -18,7 +18,7 @@ public:
 
 public: /* http(s) */
     virtual bool target_is_path(const std::string & target) override;
-    virtual bool handle_request(const BoostWeb::HttpRequestBase & request, BoostWeb::HttpResponseBase & response) override;
+    virtual bool handle_request(const BoostWeb::HttpConnectionBase & connection, const BoostWeb::HttpRequestBase & request, BoostWeb::HttpResponseBase & response) override;
     virtual void on_error(const char * protocol, const char * what, int error, const char * message) override;
 
 public: /* websocket(s) */
@@ -42,6 +42,9 @@ private:
 
 private:
     void show_error(const char * protocol, const char * what, int error, const char * message);
+
+private:
+    void parse_file_body(const std::string & boundary, const std::string & body);
 
 private:
     std::size_t                                                 m_max_msg_cnt;

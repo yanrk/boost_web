@@ -21,10 +21,17 @@ DetectSession::DetectSession(boost::asio::ip::tcp::socket socket, boost::asio::s
     , m_strand(m_socket.get_executor())
     , m_doc_root(doc_root)
     , m_buffer()
+    , m_address()
     , m_timeout(timeout)
     , m_protocol(protocol)
     , m_service(service)
 {
+    boost::system::error_code ec;
+    m_address.m_host_ip = m_socket.local_endpoint(ec).address().to_string(ec);
+    m_address.m_host_port = m_socket.local_endpoint(ec).port();
+    m_address.m_peer_ip = m_socket.remote_endpoint(ec).address().to_string(ec);
+    m_address.m_peer_port = m_socket.remote_endpoint(ec).port();
+
     BOOST_ASSERT(nullptr != service);
 }
 
@@ -49,7 +56,7 @@ void DetectSession::on_detect(boost::system::error_code ec, boost::tribool resul
         }
         else
         {
-            std::make_shared<HttpsSession>(std::move(m_socket), m_ctx, std::move(m_buffer), m_doc_root, std::move(m_timeout), m_protocol, m_service)->run();
+            std::make_shared<HttpsSession>(std::move(m_socket), m_ctx, std::move(m_buffer), m_doc_root, std::move(m_address), std::move(m_timeout), m_protocol, m_service)->run();
         }
     }
     else
@@ -60,7 +67,7 @@ void DetectSession::on_detect(boost::system::error_code ec, boost::tribool resul
         }
         else
         {
-            std::make_shared<HttpSession>(std::move(m_socket), std::move(m_buffer), m_doc_root, std::move(m_timeout), m_protocol, m_service)->run();
+            std::make_shared<HttpSession>(std::move(m_socket), std::move(m_buffer), m_doc_root, std::move(m_address), std::move(m_timeout), m_protocol, m_service)->run();
         }
     }
 }

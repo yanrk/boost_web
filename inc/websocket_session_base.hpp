@@ -24,6 +24,7 @@
 #include <boost/asio/steady_timer.hpp>
 #include <boost/asio/buffer.hpp>
 #include <boost/asio/buffers_iterator.hpp>
+#include "address.h"
 #include "boost_web.h"
 
 namespace BoostWeb { // namespace BoostWeb begin
@@ -32,15 +33,15 @@ template <class Derived>
 class WebsocketSessionBase : public WebsocketConnectionBase
 {
 public:
-    explicit WebsocketSessionBase(boost::asio::io_context & ioc, std::chrono::seconds timeout, WebServiceBase * service);
+    explicit WebsocketSessionBase(boost::asio::io_context & ioc, Address address, std::chrono::seconds timeout, WebServiceBase * service);
 
 public:
     virtual void set_user_data(void * user_data) override;
-    virtual void * get_user_data() override;
+    virtual void * get_user_data() const override;
 
 public:
-    virtual void get_host_address(std::string & ip, unsigned short & port) override;
-    virtual void get_peer_address(std::string & ip, unsigned short & port) override;
+    virtual void get_host_address(std::string & ip, unsigned short & port) const override;
+    virtual void get_peer_address(std::string & ip, unsigned short & port) const override;
 
 public:
     virtual bool recv_buffer_has_data() override;
@@ -70,12 +71,10 @@ protected:
 private:
     Derived & derived();
 
-private:
-    void get_address();
-
 protected:
     boost::asio::strand<boost::asio::io_context::executor_type>                 m_strand;
     boost::asio::steady_timer                                                   m_timer;
+    Address                                                                     m_address;
     std::chrono::seconds                                                        m_timeout;
     WebServiceBase                                                            * m_service;
 
@@ -96,10 +95,6 @@ private:
 
 private:
     void                                                                      * m_user_data;
-    std::string                                                                 m_host_ip;
-    unsigned short                                                              m_host_port;
-    std::string                                                                 m_peer_ip;
-    unsigned short                                                              m_peer_port;
 };
 
 template <class Derived>
@@ -111,19 +106,16 @@ WebsocketSessionBase<Derived>::BufferNode::BufferNode(bool text, boost::beast::f
 }
 
 template <class Derived>
-WebsocketSessionBase<Derived>::WebsocketSessionBase(boost::asio::io_context & ioc, std::chrono::seconds timeout, WebServiceBase * service)
+WebsocketSessionBase<Derived>::WebsocketSessionBase(boost::asio::io_context & ioc, Address address, std::chrono::seconds timeout, WebServiceBase * service)
     : m_strand(ioc.get_executor())
     , m_timer(ioc, (std::chrono::steady_clock::time_point::max)())
+    , m_address(std::move(address))
     , m_timeout(std::move(timeout))
     , m_service(service)
     , m_recv_queue()
     , m_send_queue()
     , m_ping_state(0x0)
     , m_user_data(nullptr)
-    , m_host_ip()
-    , m_host_port(0)
-    , m_peer_ip()
-    , m_peer_port(0)
 {
     BOOST_ASSERT(nullptr != service);
 }
@@ -135,40 +127,29 @@ Derived & WebsocketSessionBase<Derived>::derived()
 }
 
 template <class Derived>
-void WebsocketSessionBase<Derived>::get_address()
-{
-    boost::system::error_code ec;
-    boost::asio::ip::tcp::socket & socket = derived().socket();
-    m_host_ip = socket.local_endpoint(ec).address().to_string(ec);
-    m_host_port = socket.local_endpoint(ec).port();
-    m_peer_ip = socket.remote_endpoint(ec).address().to_string(ec);
-    m_peer_port = socket.remote_endpoint(ec).port();
-}
-
-template <class Derived>
 void WebsocketSessionBase<Derived>::set_user_data(void * user_data)
 {
     m_user_data = user_data;
 }
 
 template <class Derived>
-void * WebsocketSessionBase<Derived>::get_user_data()
+void * WebsocketSessionBase<Derived>::get_user_data() const
 {
     return (m_user_data);
 }
 
 template <class Derived>
-void WebsocketSessionBase<Derived>::get_host_address(std::string & ip, unsigned short & port)
+void WebsocketSessionBase<Derived>::get_host_address(std::string & ip, unsigned short & port) const
 {
-    ip = m_host_ip;
-    port = m_host_port;
+    ip = m_address.m_host_ip;
+    port = m_address.m_host_port;
 }
 
 template <class Derived>
-void WebsocketSessionBase<Derived>::get_peer_address(std::string & ip, unsigned short & port)
+void WebsocketSessionBase<Derived>::get_peer_address(std::string & ip, unsigned short & port) const
 {
-    ip = m_peer_ip;
-    port = m_peer_port;
+    ip = m_address.m_peer_ip;
+    port = m_address.m_peer_port;
 }
 
 template <class Derived>
@@ -256,8 +237,6 @@ template <class Derived>
 template <class Body, class Allocator>
 void WebsocketSessionBase<Derived>::accept(boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>> req)
 {
-    get_address();
-
     /*
      * need not use "derived().shared_from_this()" replace "this"
      * refer to the instructions for websocket::stream::control_callback()
@@ -334,7 +313,7 @@ void WebsocketSessionBase<Derived>::on_accept(boost::system::error_code ec)
         return;
     }
 
-    m_service->on_accept(derived().shared_from_this(), m_host_port);
+    m_service->on_accept(derived().shared_from_this(), m_address.m_host_port);
 
     recv();
 }

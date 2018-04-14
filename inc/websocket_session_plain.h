@@ -21,7 +21,7 @@ namespace BoostWeb { // namespace BoostWeb begin
 class WebsocketSession : public WebsocketSessionBase<WebsocketSession>, public std::enable_shared_from_this<WebsocketSession>
 {
 public:
-    explicit WebsocketSession(boost::asio::ip::tcp::socket socket, std::chrono::seconds timeout, WebServiceBase * service);
+    explicit WebsocketSession(boost::asio::ip::tcp::socket socket, Address address, std::chrono::seconds timeout, WebServiceBase * service);
 
 public:
     boost::beast::websocket::stream<boost::asio::ip::tcp::socket> & websocket();
@@ -49,9 +49,9 @@ void WebsocketSession::run(boost::beast::http::request<Body, boost::beast::http:
 }
 
 template <class Body, class Allocator>
-void make_websocket_session(boost::asio::ip::tcp::socket socket, std::chrono::seconds timeout, WebServiceBase * service, boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>> req)
+void make_websocket_session(boost::asio::ip::tcp::socket socket, Address address, std::chrono::seconds timeout, WebServiceBase * service, boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>> req)
 {
-    std::make_shared<WebsocketSession>(std::move(socket), std::move(timeout), service)->run(std::move(req));
+    std::make_shared<WebsocketSession>(std::move(socket), std::move(address), std::move(timeout), service)->run(std::move(req));
 }
 
 } // namespace BoostWeb end

@@ -25,13 +25,14 @@ extern const std::string & get_mime_type(const std::string & filename);
 extern std::string path_catenate(const std::string & base, const std::string & path);
 
 template <class Body, class Fields, class Send>
-void handle_request(WebServiceBase * service, const std::string & doc_root, boost::beast::http::request<Body, Fields> && req, Send && send)
+void handle_request(WebServiceBase * service, const std::string & doc_root, const HttpConnectionBase & connection, boost::beast::http::request<Body, Fields> && req, Send && send)
 {
     auto const bad_request = [&req](boost::beast::string_view why)
     {
         boost::beast::http::response<boost::beast::http::string_body> res{ boost::beast::http::status::bad_request, req.version() };
         res.set(boost::beast::http::field::server, "boost web server 1.0 by yanrk");
         res.set(boost::beast::http::field::content_type, "text/html");
+        res.set(boost::beast::http::field::access_control_allow_origin, "*");
         res.keep_alive(req.keep_alive());
         res.body() = why.to_string();
         res.prepare_payload();
@@ -43,6 +44,7 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, boos
         boost::beast::http::response<boost::beast::http::string_body> res{ boost::beast::http::status::not_found, req.version() };
         res.set(boost::beast::http::field::server, "boost web server 1.0 by yanrk");
         res.set(boost::beast::http::field::content_type, "text/html");
+        res.set(boost::beast::http::field::access_control_allow_origin, "*");
         res.keep_alive(req.keep_alive());
         res.body() = "The resource '" + target.to_string() + "' was not found";
         res.prepare_payload();
@@ -54,6 +56,7 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, boos
         boost::beast::http::response<boost::beast::http::string_body> res{ boost::beast::http::status::internal_server_error, req.version() };
         res.set(boost::beast::http::field::server, "boost web server 1.0 by yanrk");
         res.set(boost::beast::http::field::content_type, "text/html");
+        res.set(boost::beast::http::field::access_control_allow_origin, "*");
         res.keep_alive(req.keep_alive());
         res.body() = "An error occurred: '" + what.to_string() + "'";
         res.prepare_payload();
@@ -96,6 +99,7 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, boos
             boost::beast::http::response<boost::beast::http::empty_body> res{ boost::beast::http::status::ok, req.version() };
             res.set(boost::beast::http::field::server, "boost web server 1.0 by yanrk");
             res.set(boost::beast::http::field::content_type, get_mime_type(path));
+            res.set(boost::beast::http::field::access_control_allow_origin, "*");
             res.content_length(body.size());
             res.keep_alive(req.keep_alive());
             return (send(std::move(res)));
@@ -105,6 +109,7 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, boos
             boost::beast::http::response<boost::beast::http::file_body> res{ std::piecewise_construct, std::make_tuple(std::move(body)), std::make_tuple(boost::beast::http::status::ok, req.version()) };
             res.set(boost::beast::http::field::server, "boost web server 1.0 by yanrk");
             res.set(boost::beast::http::field::content_type, get_mime_type(path));
+            res.set(boost::beast::http::field::access_control_allow_origin, "*");
             res.content_length(body.size());
             res.keep_alive(req.keep_alive());
             return (send(std::move(res)));
@@ -124,9 +129,10 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, boos
         boost::beast::http::response<boost::beast::http::string_body, Fields> res;
         res.set(boost::beast::http::field::server, "boost web server 1.0 by yanrk");
         res.set(boost::beast::http::field::content_type, "text/html");
+        res.set(boost::beast::http::field::access_control_allow_origin, "*");
         HttpRequest<Body, Fields> request(req);
         HttpResponse<boost::beast::http::string_body, Fields> response(res);
-        service->handle_request(request, response);
+        service->handle_request(connection, request, response);
         res.keep_alive(req.keep_alive());
         res.prepare_payload();
         return (send(std::move(res)));

@@ -24,7 +24,7 @@ namespace BoostWeb { // namespace BoostWeb begin
 class HttpSession : public HttpSessionBase<HttpSession>, public std::enable_shared_from_this<HttpSession>
 {
 public:
-    HttpSession(boost::asio::ip::tcp::socket socket, boost::beast::flat_buffer buffer, const std::string & doc_root, std::chrono::seconds timeout, unsigned char protocol, WebServiceBase * service);
+    HttpSession(boost::asio::ip::tcp::socket socket, boost::beast::flat_buffer buffer, const std::string & doc_root, Address address, std::chrono::seconds timeout, unsigned char protocol, WebServiceBase * service);
 
 public:
     boost::asio::ip::tcp::socket & stream();

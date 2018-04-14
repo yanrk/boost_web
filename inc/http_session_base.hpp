@@ -25,16 +25,21 @@
 #include "websocket_session_base.hpp"
 #include "websocket_session_plain.h"
 #include "websocket_session_ssl.h"
-#include "boost_web.h"
 #include "http_utility.h"
+#include "address.h"
+#include "boost_web.h"
 
 namespace BoostWeb { // namespace BoostWeb begin
 
 template <class Derived>
-class HttpSessionBase
+class HttpSessionBase : public HttpConnectionBase
 {
 public:
-    HttpSessionBase(boost::asio::io_context & ioc, boost::beast::flat_buffer buffer, const std::string & doc_root, std::chrono::seconds timeout, unsigned char protocol, WebServiceBase * service);
+    explicit HttpSessionBase(boost::asio::io_context & ioc, boost::beast::flat_buffer buffer, const std::string & doc_root, Address address, std::chrono::seconds timeout, unsigned char protocol, WebServiceBase * service);
+
+public:
+    virtual void get_host_address(std::string & ip, unsigned short & port) const override;
+    virtual void get_peer_address(std::string & ip, unsigned short & port) const override;
 
 public:
     void recv();
@@ -53,6 +58,7 @@ private:
 protected:
     boost::asio::strand<boost::asio::io_context::executor_type>                 m_strand;
     boost::asio::steady_timer                                                   m_timer;
+    Address                                                                     m_address;
     std::chrono::seconds                                                        m_timeout;
     unsigned char                                                               m_protocol;
     WebServiceBase                                                            * m_service;
@@ -151,9 +157,10 @@ void HttpSessionBase<Derived>::WorkQueue::operator () (boost::beast::http::messa
 }
 
 template <class Derived>
-HttpSessionBase<Derived>::HttpSessionBase(boost::asio::io_context & ioc, boost::beast::flat_buffer buffer, const std::string & doc_root, std::chrono::seconds timeout, unsigned char protocol, WebServiceBase * service)
+HttpSessionBase<Derived>::HttpSessionBase(boost::asio::io_context & ioc, boost::beast::flat_buffer buffer, const std::string & doc_root, Address address, std::chrono::seconds timeout, unsigned char protocol, WebServiceBase * service)
     : m_strand(ioc.get_executor())
     , m_timer(ioc, (std::chrono::steady_clock::time_point::max)())
+    , m_address(std::move(address))
     , m_timeout(std::move(timeout))
     , m_protocol(protocol)
     , m_service(service)
@@ -169,6 +176,20 @@ template <class Derived>
 Derived & HttpSessionBase<Derived>::derived()
 {
     return (static_cast<Derived &>(*this));
+}
+
+template <class Derived>
+void HttpSessionBase<Derived>::get_host_address(std::string & ip, unsigned short & port) const
+{
+    ip = m_address.m_host_ip;
+    port = m_address.m_host_port;
+}
+
+template <class Derived>
+void HttpSessionBase<Derived>::get_peer_address(std::string & ip, unsigned short & port) const
+{
+    ip = m_address.m_peer_ip;
+    port = m_address.m_peer_port;
 }
 
 template <class Derived>
@@ -233,7 +254,7 @@ void HttpSessionBase<Derived>::on_recv(boost::system::error_code ec)
         }
         else
         {
-            make_websocket_session(derived().release_stream(), std::move(m_timeout), m_service, std::move(m_request));
+            make_websocket_session(derived().release_stream(), std::move(m_address), std::move(m_timeout), m_service, std::move(m_request));
         }
         return;
     }
@@ -244,7 +265,7 @@ void HttpSessionBase<Derived>::on_recv(boost::system::error_code ec)
         return;
     }
 
-    handle_request(m_service, m_doc_root, std::move(m_request), m_work_queue);
+    handle_request(m_service, m_doc_root, *this, std::move(m_request), m_work_queue);
 
     if (!m_work_queue.is_full())
     {

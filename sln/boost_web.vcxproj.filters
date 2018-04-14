@@ -29,6 +29,9 @@
     <ClInclude Include="..\inc\common\ssl_stream.hpp">
       <Filter>inc\common</Filter>
     </ClInclude>
+    <ClInclude Include="..\inc\address.h">
+      <Filter>inc</Filter>
+    </ClInclude>
     <ClInclude Include="..\inc\boost_web.h">
       <Filter>inc</Filter>
     </ClInclude>
@@ -73,6 +76,9 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\address.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
     <ClCompile Include="..\src\detect_session.cpp">
       <Filter>src</Filter>
     </ClCompile>

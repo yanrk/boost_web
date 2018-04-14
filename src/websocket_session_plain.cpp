@@ -12,8 +12,8 @@
 
 namespace BoostWeb { // namespace BoostWeb begin
 
-WebsocketSession::WebsocketSession(boost::asio::ip::tcp::socket socket, std::chrono::seconds timeout, WebServiceBase * service)
-    : WebsocketSessionBase<WebsocketSession>(socket.get_executor().context(), std::move(timeout), service)
+WebsocketSession::WebsocketSession(boost::asio::ip::tcp::socket socket, Address address, std::chrono::seconds timeout, WebServiceBase * service)
+    : WebsocketSessionBase<WebsocketSession>(socket.get_executor().context(), std::move(address), std::move(timeout), service)
     , m_websocket(std::move(socket))
     , m_close(false)
 {

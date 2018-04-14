@@ -1,6 +1,7 @@
 #include <cstdio>
 #include <cassert>
 #include <cstring>
+#include <algorithm>
 #include "test_service.h"
 
 static const char msg_blk[] = "this is a message\n";
@@ -27,13 +28,42 @@ bool TestService::target_is_path(const std::string & target)
     return ("/sys/" != target.substr(0, 5));
 }
 
-bool TestService::handle_request(const BoostWeb::HttpRequestBase & request, BoostWeb::HttpResponseBase & response)
+bool TestService::handle_request(const BoostWeb::HttpConnectionBase & connection, const BoostWeb::HttpRequestBase & request, BoostWeb::HttpResponseBase & response)
 {
+    std::string host_ip;
+    unsigned short host_port = 0;
+    connection.get_host_address(host_ip, host_port);
+    std::string peer_ip;
+    unsigned short peer_port = 0;
+    connection.get_peer_address(peer_ip, peer_port);
+    printf("http(s) session: [%s:%u] -> [%s:%u]\n", host_ip.c_str(), host_port, peer_ip.c_str(), peer_port);
     response.set_result(BoostWeb::http_result_t::http_ok);
     printf("method: %s\n", request.get_method_string().c_str());
     printf("target: %s\n", request.get_target().c_str());
     printf("cookie: %s\n", request.get_field_cookie().c_str());
     printf("body: {\n%s\n}\n", request.get_body().c_str());
+    if (BoostWeb::http_method_t::http_post == request.get_method())
+    {
+        const std::string content_type(request.get_field_content_type());
+        if (std::string::npos != content_type.find("multipart/form-data"))
+        {
+            printf("it is a post file request\n");
+            const std::string boundary_mark("boundary=");
+            std::string::size_type boundary_pos_beg = content_type.find(boundary_mark);
+            if (std::string::npos != boundary_pos_beg)
+            {
+                boundary_pos_beg += boundary_mark.size();
+                std::string::size_type boundary_pos_end = content_type.find(';', boundary_pos_beg);
+                const std::string boundary(content_type.substr(boundary_pos_beg, std::min<std::string::size_type>(boundary_pos_end, content_type.size() - boundary_pos_beg)));
+                printf("boundary is (%s)\n", boundary.c_str());
+                parse_file_body(boundary, request.get_body());
+            }
+            else
+            {
+                printf("boundary is not found\n");
+            }
+        }
+    }
     response.set_body("recv request (" + request.get_method_string() + ": " + request.get_target() + ", {" + request.get_body() + "})");
     return (true);
 }
@@ -78,6 +108,65 @@ void TestService::show_error(const char * protocol, const char * what, int error
     printf("%s::%s error (%u) {%s}\n", protocol, what, error, message);
 }
 
+void TestService::parse_file_body(const std::string & boundary, const std::string & body)
+{
+    const std::string first_boundary("--" + boundary + "\r\n");
+    const std::string next_boundary_head("\r\n--" + boundary);
+    const std::string middle_boundary("\r\n--" + boundary + "\r\n");
+    const std::string last_boundary("\r\n--" + boundary + "--");
+    const std::string filename_head("filename=\"");
+    const std::string filename_tail("\"");
+    const std::string crlf_crlf("\r\n\r\n");
+    std::string::size_type file_pos_beg = body.find(first_boundary);
+    uint32_t file_index = 0;
+    while (std::string::npos != file_pos_beg)
+    {
+        file_index += 1;
+
+        std::string::size_type filename_pos_beg = body.find(filename_head, file_pos_beg);
+        if (std::string::npos != filename_pos_beg)
+        {
+            filename_pos_beg += filename_head.size();
+            std::string::size_type filename_pos_end = body.find(filename_tail, filename_pos_beg);
+            if (std::string::npos != filename_pos_end)
+            {
+                printf("file %u name: (%s)\n", file_index, body.substr(filename_pos_beg, filename_pos_end - filename_pos_beg).c_str());
+            }
+        }
+
+        file_pos_beg = body.find(crlf_crlf, file_pos_beg);
+        if (std::string::npos == file_pos_beg)
+        {
+            continue;
+        }
+        file_pos_beg += crlf_crlf.size();
+
+        std::string::size_type file_pos_end = body.find(next_boundary_head, file_pos_beg);
+        if (std::string::npos == file_pos_end)
+        {
+            continue;
+        }
+
+        const std::string next_boundary_tail(body.substr(file_pos_end + next_boundary_head.size(), 2));
+        const std::string next_boundary(next_boundary_head + next_boundary_tail);
+        if (next_boundary == middle_boundary)
+        {
+            printf("file %u content: {\n%s\n}\n", file_index, body.substr(file_pos_beg, file_pos_end - file_pos_beg).c_str());
+            file_pos_beg = file_pos_end + middle_boundary.size();
+        }
+        else if (next_boundary == last_boundary)
+        {
+            printf("file %u content: {\n%s\n}\n", file_index, body.substr(file_pos_beg, file_pos_end - file_pos_beg).c_str());
+            break;
+        }
+        else
+        {
+            printf("invalid boundary data: (%s)\n", next_boundary.c_str());
+            break;
+        }
+    }
+}
+
 bool TestService::insert_connection(BoostWeb::WebsocketConnectionSharedPtr connection)
 {
     std::string host_ip;
@@ -86,7 +175,7 @@ bool TestService::insert_connection(BoostWeb::WebsocketConnectionSharedPtr conne
     std::string peer_ip;
     unsigned short peer_port = 0;
     connection->get_peer_address(peer_ip, peer_port);
-    printf("connect: %u, [%s:%u] -> [%s:%u]\n", static_cast<uint32_t>(++m_connect_count), host_ip.c_str(), host_port, peer_ip.c_str(), peer_port);
+    printf("websocket(s) connect: %u, [%s:%u] -> [%s:%u]\n", static_cast<uint32_t>(++m_connect_count), host_ip.c_str(), host_port, peer_ip.c_str(), peer_port);
     connection->set_user_data(reinterpret_cast<void *>(0));
     return (true);
 }
@@ -99,7 +188,7 @@ bool TestService::remove_connection(BoostWeb::WebsocketConnectionSharedPtr conne
     std::string peer_ip;
     unsigned short peer_port = 0;
     connection->get_peer_address(peer_ip, peer_port);
-    printf("disconnect: %u, [%s:%u] -> [%s:%u]\n", static_cast<uint32_t>(++m_disconnect_count), host_ip.c_str(), host_port, peer_ip.c_str(), peer_port);
+    printf("websocket(s) disconnect: %u, [%s:%u] -> [%s:%u]\n", static_cast<uint32_t>(++m_disconnect_count), host_ip.c_str(), host_port, peer_ip.c_str(), peer_port);
     std::size_t count = reinterpret_cast<std::size_t>(connection->get_user_data());
     return (true);
 }
@@ -222,7 +311,7 @@ bool TestService::init()
     server_node.protocol = BoostWeb::support_protocol_t::protocol_all;
     const char * crt_file = "f:/codes/codes/transmission/web_transmit_adapter/res/local.foxrenderfarm.com.crt";
     const char * key_file = "f:/codes/codes/transmission/web_transmit_adapter/res/local.foxrenderfarm.com.key";
-    if (!m_web_manager.init(this, &server_node, 1, true, crt_file, key_file, 5))
+    if (!m_web_manager.init(this, &server_node, 1, true, crt_file, key_file, 1))
     {
         return (false);
     }

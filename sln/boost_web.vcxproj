@@ -38,6 +38,7 @@
     <ResourceCompile Include="boost_web.rc" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\inc\address.h" />
     <ClInclude Include="..\inc\boost_web.h" />
     <ClInclude Include="..\inc\common\detect_ssl.hpp" />
     <ClInclude Include="..\inc\common\ssl_stream.hpp" />
@@ -56,6 +57,7 @@
     <ClInclude Include="..\inc\web_manager_impl.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\src\address.cpp" />
     <ClCompile Include="..\src\detect_session.cpp" />
     <ClCompile Include="..\src\http_session_plain.cpp" />
     <ClCompile Include="..\src\http_session_ssl.cpp" />

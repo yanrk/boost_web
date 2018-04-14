@@ -161,11 +161,11 @@ public:
 
 public:
     virtual void set_user_data(void * user_data) = 0;
-    virtual void * get_user_data() = 0;
+    virtual void * get_user_data() const = 0;
 
 public:
-    virtual void get_host_address(std::string & ip, unsigned short & port) = 0;
-    virtual void get_peer_address(std::string & ip, unsigned short & port) = 0;
+    virtual void get_host_address(std::string & ip, unsigned short & port) const = 0;
+    virtual void get_peer_address(std::string & ip, unsigned short & port) const = 0;
 
 public:
     virtual bool recv_buffer_has_data() = 0;
@@ -179,6 +179,17 @@ public:
 typedef std::shared_ptr<WebsocketConnectionBase> WebsocketConnectionSharedPtr;
 typedef std::weak_ptr<WebsocketConnectionBase> WebsocketConnectionWeakPtr;
 
+class BOOST_WEB_API HttpConnectionBase
+{
+public:
+    HttpConnectionBase() = default;
+    virtual ~HttpConnectionBase() = default;
+
+public:
+    virtual void get_host_address(std::string & ip, unsigned short & port) const = 0;
+    virtual void get_peer_address(std::string & ip, unsigned short & port) const = 0;
+};
+
 class BOOST_WEB_API WebServiceBase
 {
 public:
@@ -187,7 +198,7 @@ public:
 
 public: /* http(s) */
     virtual bool target_is_path(const std::string & target) = 0;
-    virtual bool handle_request(const HttpRequestBase & request, HttpResponseBase & response) = 0;
+    virtual bool handle_request(const HttpConnectionBase & connection, const HttpRequestBase & request, HttpResponseBase & response) = 0;
     virtual void on_error(const char * protocol, const char * what, int error, const char * message) = 0;
 
 public: /* websocket(s) */

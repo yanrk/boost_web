@@ -22,6 +22,7 @@
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/bind_executor.hpp>
 #include "common/detect_ssl.hpp"
+#include "address.h"
 #include "boost_web.h"
 
 namespace BoostWeb { // namespace BoostWeb begin
@@ -43,6 +44,7 @@ private:
     boost::asio::strand<boost::asio::io_context::executor_type>                 m_strand;
     const std::string                                                         & m_doc_root;
     boost::beast::flat_buffer                                                   m_buffer;
+    Address                                                                     m_address;
     std::chrono::seconds                                                        m_timeout;
     unsigned char                                                               m_protocol;
     WebServiceBase                                                            * m_service;

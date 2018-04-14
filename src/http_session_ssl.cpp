@@ -12,8 +12,8 @@
 
 namespace BoostWeb { // namespace BoostWeb begin
 
-HttpsSession::HttpsSession(boost::asio::ip::tcp::socket socket, boost::asio::ssl::context & ctx, boost::beast::flat_buffer buffer, const std::string & doc_root, std::chrono::seconds timeout, unsigned char protocol, WebServiceBase * service)
-    : HttpSessionBase<HttpsSession>(socket.get_executor().context(), std::move(buffer), doc_root, std::move(timeout), protocol, service)
+HttpsSession::HttpsSession(boost::asio::ip::tcp::socket socket, boost::asio::ssl::context & ctx, boost::beast::flat_buffer buffer, const std::string & doc_root, Address address, std::chrono::seconds timeout, unsigned char protocol, WebServiceBase * service)
+    : HttpSessionBase<HttpsSession>(socket.get_executor().context(), std::move(buffer), doc_root, std::move(address), std::move(timeout), protocol, service)
     , m_stream(std::move(socket), ctx)
 {
 
