@@ -241,7 +241,7 @@ void WebsocketSessionBase<Derived>::accept(boost::beast::http::request<Body, boo
      * need not use "derived().shared_from_this()" replace "this"
      * refer to the instructions for websocket::stream::control_callback()
      */
-//  derived().websocket().control_callback(std::bind(&WebsocketSessionBase::on_control, this, std::placeholders::_1, std::placeholders::_2));
+    derived().websocket().control_callback(std::bind(&WebsocketSessionBase::on_control, this, std::placeholders::_1, std::placeholders::_2));
 
     m_timer.expires_after(m_timeout);
 
@@ -351,13 +351,13 @@ void WebsocketSessionBase<Derived>::on_ping(boost::system::error_code ec)
 template <class Derived>
 void WebsocketSessionBase<Derived>::on_recv(boost::system::error_code ec, std::size_t bytes_transferred)
 {
-    if (ec)
+    if (boost::beast::websocket::error::closed == ec || boost::asio::error::operation_aborted == ec)
     {
-        if (boost::beast::websocket::error::closed != ec && boost::asio::error::operation_aborted != ec)
-        {
-            m_service->on_error(derived().shared_from_this(), derived().protocol(), "recv", ec.value(), ec.message().c_str());
-        }
         return;
+    }
+    else if (ec)
+    {
+        m_service->on_error(derived().shared_from_this(), derived().protocol(), "recv", ec.value(), ec.message().c_str());
     }
 
     activity();

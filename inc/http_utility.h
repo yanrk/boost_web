@@ -94,13 +94,18 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, cons
             return (send(server_error(ec.message())));
         }
 
+        /*
+         * cache the body size since we need it after the move operate
+         */
+        const uint64_t body_size = body.size();
+
         if (boost::beast::http::verb::head == req.method())
         {
             boost::beast::http::response<boost::beast::http::empty_body> res{ boost::beast::http::status::ok, req.version() };
             res.set(boost::beast::http::field::server, "boost web server 1.0 by yanrk");
             res.set(boost::beast::http::field::content_type, get_mime_type(path));
             res.set(boost::beast::http::field::access_control_allow_origin, "*");
-            res.content_length(body.size());
+            res.content_length(body_size);
             res.keep_alive(req.keep_alive());
             return (send(std::move(res)));
         }
@@ -110,7 +115,7 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, cons
             res.set(boost::beast::http::field::server, "boost web server 1.0 by yanrk");
             res.set(boost::beast::http::field::content_type, get_mime_type(path));
             res.set(boost::beast::http::field::access_control_allow_origin, "*");
-            res.content_length(body.size());
+            res.content_length(body_size);
             res.keep_alive(req.keep_alive());
             return (send(std::move(res)));
         }
