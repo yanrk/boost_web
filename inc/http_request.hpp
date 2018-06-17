@@ -28,6 +28,9 @@ public:
     virtual std::string get_method_string() const override;
     virtual void set_target(const std::string &) override;
     virtual std::string get_target() const override;
+
+private:
+    using HttpMessage<true, Body, Fields, HttpRequestBase>::m_message;
 };
 
 template <class Body, class Fields>

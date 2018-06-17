@@ -11,7 +11,7 @@ object_dir         = $(project_home)/.objs
 
 
 # includes of boost headers
-boost_inc_path     = /usr/local/include/boost_1_66_0
+boost_inc_path     = /usr/local/include/boost_1_67_0
 boost_includes     = -I$(boost_inc_path)
 
 # includes of boost_web headers
@@ -39,7 +39,7 @@ boost_web_objects  = $(boost_web_source:$(project_home)%.cpp=$(object_dir)%.o)
 system_libs        = -lpthread
 
 # boost librarys
-boost_lib_inc      = /usr/local/lib
+boost_lib_inc      = /usr/local/lib/boost_so
 boost_libs         = -L$(boost_lib_inc) -lboost_container -lboost_system -lboost_thread
 
 # local depends librarys

@@ -28,6 +28,9 @@ public:
     virtual std::size_t get_result_integer() const override;
     virtual void set_reason(const std::string &) override;
     virtual std::string get_reason() const override;
+
+private:
+    using HttpMessage<false, Body, Fields, HttpResponseBase>::m_message;
 };
 
 template <class Body, class Fields>

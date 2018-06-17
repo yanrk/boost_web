@@ -105,9 +105,10 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
         std::make_shared<Listener>(m_io_contexts.back(), m_ssl_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(service_node.host), service_node.port), service_node.root, std::max<std::size_t>(15, service_node.timeout), protocol, m_web_service)->run();
     }
 
+    auto thread_func = [this] { this->m_io_contexts.back().run(); };
     for (std::size_t index = 0; index < thread_count; ++index)
     {
-        m_thread_list.push_back(boost::factory<std::thread *>()([this] { this->m_io_contexts.back().run(); }));
+        m_thread_list.push_back(boost::factory<std::thread *>()(thread_func));
     }
 
     return (true);

@@ -11,7 +11,7 @@ object_dir         = $(project_home)/.objs
 
 
 # includes of boost headers
-boost_inc_path     = /usr/local/include/boost_1_66_0
+boost_inc_path     = /usr/local/include/boost_1_67_0
 boost_includes     = -I$(boost_inc_path)
 
 # includes of boost_web headers
@@ -50,7 +50,7 @@ build_obj_flags    = -std=c++11 -g -Wall -O1 -pipe -fPIC
 build_exec_flags   = $(build_obj_flags)
 
 # build flags for dynamic link librarys
-build_so_flags     = -std=c++0x -shared
+build_so_flags     = -std=c++11 -shared
 
 # build flags for static link librarys
 build_a_flags      = -rv
