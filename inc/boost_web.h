@@ -224,7 +224,7 @@ struct support_protocol_t
     };
 };
 
-struct ServiceNode
+struct BOOST_WEB_API ServiceNode
 {
     const char     * host;
     unsigned short   port;

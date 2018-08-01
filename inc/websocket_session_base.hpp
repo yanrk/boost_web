@@ -14,10 +14,12 @@
 
 #include <deque>
 #include <string>
+#include <memory>
 #include <utility>
 #include <functional>
 #include <boost/beast/core.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/post.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/strand.hpp>
@@ -32,6 +34,16 @@ namespace BoostWeb { // namespace BoostWeb begin
 template <class Derived>
 class WebsocketSessionBase : public WebsocketConnectionBase
 {
+private:
+    struct BufferNode
+    {
+        BufferNode(bool text, boost::beast::flat_buffer && buffer);
+        BufferNode(BufferNode && other);
+
+        bool                            m_text;
+        boost::beast::flat_buffer       m_buffer;
+    };
+
 public:
     explicit WebsocketSessionBase(boost::asio::io_context & ioc, Address address, std::chrono::seconds timeout, WebServiceBase * service);
 
@@ -67,6 +79,7 @@ protected:
     void on_ping(boost::system::error_code ec);
     void on_recv(boost::system::error_code ec, std::size_t bytes_transferred);
     void on_send(boost::system::error_code ec, std::size_t bytes_transferred);
+    void on_post(std::shared_ptr<BufferNode> buffer_node);
 
 private:
     Derived & derived();
@@ -79,14 +92,6 @@ protected:
     WebServiceBase                                                            * m_service;
 
 private:
-    struct BufferNode
-    {
-        BufferNode(bool text, boost::beast::flat_buffer && buffer);
-
-        bool                            m_text;
-        boost::beast::flat_buffer       m_buffer;
-    };
-
     std::deque<BufferNode>                                                      m_recv_queue;
     std::deque<BufferNode>                                                      m_send_queue;
 
@@ -101,6 +106,14 @@ template <class Derived>
 WebsocketSessionBase<Derived>::BufferNode::BufferNode(bool text, boost::beast::flat_buffer && buffer)
     : m_text(text)
     , m_buffer(std::move(buffer))
+{
+
+}
+
+template <class Derived>
+WebsocketSessionBase<Derived>::BufferNode::BufferNode(BufferNode && other)
+    : m_text(other.m_text)
+    , m_buffer(std::move(other.m_buffer))
 {
 
 }
@@ -215,12 +228,7 @@ bool WebsocketSessionBase<Derived>::send_buffer_fill_len(bool text, const void *
     std::copy_n(reinterpret_cast<const char *>(0 != len ? data : ""), len, boost::asio::buffers_begin(buffer.prepare(len)));
     buffer.commit(len);
 
-    m_send_queue.emplace_back(BufferNode(text, std::move(buffer)));
-
-    if (1 == m_send_queue.size())
-    {
-        send();
-    }
+    boost::asio::post(derived().websocket().get_executor(), boost::asio::bind_executor(m_strand, std::bind(&WebsocketSessionBase::on_post, derived().shared_from_this(), std::make_shared<BufferNode>(text, std::move(buffer)))));
 
     return (true);
 }
@@ -358,6 +366,7 @@ void WebsocketSessionBase<Derived>::on_recv(boost::system::error_code ec, std::s
     else if (ec)
     {
         m_service->on_error(derived().shared_from_this(), derived().protocol(), "recv", ec.value(), ec.message().c_str());
+        return;
     }
 
     activity();
@@ -365,7 +374,7 @@ void WebsocketSessionBase<Derived>::on_recv(boost::system::error_code ec, std::s
     BOOST_ASSERT(!m_recv_queue.empty());
 
     m_recv_queue.back().m_text = derived().websocket().got_text();
-    m_recv_queue.back().m_buffer.commit(bytes_transferred);
+//  m_recv_queue.back().m_buffer.commit(bytes_transferred);
 
     m_service->on_recv(derived().shared_from_this());
 
@@ -397,6 +406,17 @@ void WebsocketSessionBase<Derived>::on_send(boost::system::error_code ec, std::s
     m_service->on_send(derived().shared_from_this());
 
     if (!m_send_queue.empty())
+    {
+        send();
+    }
+}
+
+template <class Derived>
+void WebsocketSessionBase<Derived>::on_post(std::shared_ptr<BufferNode> buffer_node)
+{
+    m_send_queue.emplace_back(std::move(*buffer_node));
+
+    if (1 == m_send_queue.size())
     {
         send();
     }
