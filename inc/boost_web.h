@@ -174,6 +174,9 @@ public:
     virtual std::size_t recv_buffer_size() = 0;
     virtual bool recv_buffer_drop_len(std::size_t len) = 0;
     virtual bool send_buffer_fill_len(bool text, const void * data, std::size_t len) = 0;
+
+public:
+    virtual void close() = 0;
 };
 
 typedef std::shared_ptr<WebsocketConnectionBase> WebsocketConnectionSharedPtr;
@@ -214,13 +217,15 @@ struct support_protocol_t
 {
     enum value_t
     {
-        protocol_http  = 0x01, 
-        protocol_https = 0x02, 
-        protocol_ws    = 0x04, 
-        protocol_wss   = 0x08, 
-        protocol_plain = protocol_http | protocol_ws, 
-        protocol_ssl   = protocol_https | protocol_wss, 
-        protocol_all   = protocol_http | protocol_https | protocol_ws | protocol_wss
+        protocol_http   = 0x01, 
+        protocol_https  = 0x02, 
+        protocol_httpss = protocol_http | protocol_https, 
+        protocol_ws     = 0x04, 
+        protocol_wss    = 0x08, 
+        protocol_wsss   = protocol_ws | protocol_wss, 
+        protocol_plain  = protocol_http | protocol_ws, 
+        protocol_ssl    = protocol_https | protocol_wss, 
+        protocol_all    = protocol_httpss | protocol_wsss
     };
 };
 

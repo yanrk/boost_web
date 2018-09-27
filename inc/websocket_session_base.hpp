@@ -64,6 +64,9 @@ public:
     virtual bool send_buffer_fill_len(bool text, const void * data, std::size_t len) override;
 
 public:
+    virtual void close() override;
+
+public:
     template <class Body, class Allocator> void accept(boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>> req);
     void recv();
     void send();
@@ -234,6 +237,12 @@ bool WebsocketSessionBase<Derived>::send_buffer_fill_len(bool text, const void *
 }
 
 template <class Derived>
+void WebsocketSessionBase<Derived>::close()
+{
+    derived().timeout();
+}
+
+template <class Derived>
 void WebsocketSessionBase<Derived>::start_timer()
 {
     m_timer.expires_at((std::chrono::steady_clock::time_point::max)());
@@ -321,7 +330,11 @@ void WebsocketSessionBase<Derived>::on_accept(boost::system::error_code ec)
         return;
     }
 
-    m_service->on_accept(derived().shared_from_this(), m_address.m_host_port);
+    if (!m_service->on_accept(derived().shared_from_this(), m_address.m_host_port))
+    {
+        close();
+        return;
+    }
 
     recv();
 }
@@ -376,7 +389,11 @@ void WebsocketSessionBase<Derived>::on_recv(boost::system::error_code ec, std::s
     m_recv_queue.back().m_text = derived().websocket().got_text();
 //  m_recv_queue.back().m_buffer.commit(bytes_transferred);
 
-    m_service->on_recv(derived().shared_from_this());
+    if (!m_service->on_recv(derived().shared_from_this()))
+    {
+        close();
+        return;
+    }
 
     recv();
 }
@@ -403,7 +420,11 @@ void WebsocketSessionBase<Derived>::on_send(boost::system::error_code ec, std::s
 
     m_send_queue.pop_front();
 
-    m_service->on_send(derived().shared_from_this());
+    if (!m_service->on_send(derived().shared_from_this()))
+    {
+        close();
+        return;
+    }
 
     if (!m_send_queue.empty())
     {
