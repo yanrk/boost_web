@@ -4,8 +4,8 @@
  * Author      : yanrk
  * Email       : yanrkchina@163.com
  * Blog        : blog.csdn.net/cxxmaker
- * Version     : 1.0
- * Copyright(C): 2018
+ * Version     : 2.0
+ * Copyright(C): 2019 - 2020
  ********************************************************/
 
 #include <type_traits>
@@ -15,32 +15,34 @@
 
 namespace BoostWeb { // namespace BoostWeb begin
 
-DetectSession::DetectSession(boost::asio::ip::tcp::socket socket, boost::asio::ssl::context & ctx, const std::string & doc_root, std::size_t timeout, unsigned char protocol, WebServiceBase * service)
-    : m_socket(std::move(socket))
+DetectSession::DetectSession(boost::asio::ip::tcp::socket && socket, boost::asio::ssl::context & ctx, const std::shared_ptr<const std::string> & doc_root, std::size_t timeout, uint64_t body_limit, unsigned char protocol, WebServiceBase * service)
+    : m_stream(std::move(socket))
     , m_ctx(ctx)
-    , m_strand(m_socket.get_executor())
     , m_doc_root(doc_root)
     , m_buffer()
     , m_address()
     , m_timeout(timeout)
+    , m_body_limit(body_limit)
     , m_protocol(protocol)
     , m_service(service)
 {
-    boost::system::error_code ec;
-    m_address.m_host_ip = m_socket.local_endpoint(ec).address().to_string(ec);
-    m_address.m_host_port = m_socket.local_endpoint(ec).port();
-    m_address.m_peer_ip = m_socket.remote_endpoint(ec).address().to_string(ec);
-    m_address.m_peer_port = m_socket.remote_endpoint(ec).port();
+    boost::beast::error_code ec;
+    m_address.m_host_ip = m_stream.socket().local_endpoint(ec).address().to_string(ec);
+    m_address.m_host_port = m_stream.socket().local_endpoint(ec).port();
+    m_address.m_peer_ip = m_stream.socket().remote_endpoint(ec).address().to_string(ec);
+    m_address.m_peer_port = m_stream.socket().remote_endpoint(ec).port();
 
     BOOST_ASSERT(nullptr != service);
 }
 
 void DetectSession::run()
 {
-    async_detect_ssl(m_socket, m_buffer, boost::asio::bind_executor(m_strand, std::bind(&DetectSession::on_detect, shared_from_this(), std::placeholders::_1, std::placeholders::_2)));
+    m_stream.expires_after(m_timeout);
+
+    boost::beast::async_detect_ssl(m_stream, m_buffer, boost::beast::bind_front_handler(&DetectSession::on_detect, shared_from_this()));
 }
 
-void DetectSession::on_detect(boost::system::error_code ec, boost::tribool result)
+void DetectSession::on_detect(boost::beast::error_code ec, boost::tribool result)
 {
     if (ec)
     {
@@ -56,7 +58,7 @@ void DetectSession::on_detect(boost::system::error_code ec, boost::tribool resul
         }
         else
         {
-            std::make_shared<HttpsSession>(std::move(m_socket), m_ctx, std::move(m_buffer), m_doc_root, std::move(m_address), std::move(m_timeout), m_protocol, m_service)->run();
+            std::make_shared<HttpsSession>(std::move(m_stream), m_ctx, std::move(m_buffer), m_doc_root, std::move(m_address), std::move(m_timeout), m_body_limit, m_protocol, m_service)->run();
         }
     }
     else
@@ -67,7 +69,7 @@ void DetectSession::on_detect(boost::system::error_code ec, boost::tribool resul
         }
         else
         {
-            std::make_shared<HttpSession>(std::move(m_socket), std::move(m_buffer), m_doc_root, std::move(m_address), std::move(m_timeout), m_protocol, m_service)->run();
+            std::make_shared<HttpSession>(std::move(m_stream), std::move(m_buffer), m_doc_root, std::move(m_address), std::move(m_timeout), m_body_limit, m_protocol, m_service)->run();
         }
     }
 }

@@ -306,8 +306,9 @@ bool TestService::init()
     BoostWeb::ServiceNode server_node;
     server_node.host = "0.0.0.0";
     server_node.port = 12345;
-    server_node.root = "g:/codes_vs2015/munu/munu/www";
+    server_node.root = "f:/codes_vs2015/munu/munu/www";
     server_node.timeout = 15;
+    server_node.body_limit = 0;
     server_node.protocol = BoostWeb::support_protocol_t::protocol_all;
     const char * crt_file = "f:/codes/codes/transmission/web_transmit_adapter/res/local.foxrenderfarm.com.crt";
     const char * key_file = "f:/codes/codes/transmission/web_transmit_adapter/res/local.foxrenderfarm.com.key";

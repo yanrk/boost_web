@@ -4,8 +4,8 @@
  * Author      : yanrk
  * Email       : yanrkchina@163.com
  * Blog        : blog.csdn.net/cxxmaker
- * Version     : 1.0
- * Copyright(C): 2018
+ * Version     : 2.0
+ * Copyright(C): 2019 - 2020
  ********************************************************/
 
 #ifndef BOOST_WEB_HTTP_RESPONSE_HPP
@@ -98,7 +98,7 @@ void HttpResponse<Body, Fields>::set_reason(const std::string & http_target)
 template <class Body, class Fields>
 std::string HttpResponse<Body, Fields>::get_reason() const
 {
-    return (m_message.reason().to_string());
+    return (std::string(m_message.reason()));
 }
 
 } // namespace BoostWeb end

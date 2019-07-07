@@ -4,8 +4,8 @@
  * Author      : yanrk
  * Email       : yanrkchina@163.com
  * Blog        : blog.csdn.net/cxxmaker
- * Version     : 1.0
- * Copyright(C): 2018
+ * Version     : 2.0
+ * Copyright(C): 2019 - 2020
  ********************************************************/
 
 #include <memory>
@@ -15,18 +15,19 @@
 
 namespace BoostWeb { // namespace BoostWeb begin
 
-Listener::Listener(boost::asio::io_context & ioc, boost::asio::ssl::context & ctx, boost::asio::ip::tcp::endpoint endpoint, const std::string & doc_root, std::size_t timeout, unsigned char protocol, WebServiceBase * service)
-    : m_ctx(ctx)
-    , m_acceptor(ioc)
-    , m_socket(ioc)
+Listener::Listener(boost::asio::io_context & ioc, boost::asio::ssl::context & ctx, boost::asio::ip::tcp::endpoint endpoint, const std::shared_ptr<const std::string> & doc_root, std::size_t timeout, uint64_t body_limit, unsigned char protocol, WebServiceBase * service)
+    : m_ioc(ioc)
+    , m_ctx(ctx)
+    , m_acceptor(boost::asio::make_strand(ioc))
     , m_doc_root(doc_root)
     , m_timeout(timeout)
+    , m_body_limit(body_limit)
     , m_protocol(protocol)
     , m_service(service)
 {
     BOOST_ASSERT(nullptr != service);
 
-    boost::system::error_code ec;
+    boost::beast::error_code ec;
 
     m_acceptor.open(endpoint.protocol(), ec);
     if (ec)
@@ -35,7 +36,7 @@ Listener::Listener(boost::asio::io_context & ioc, boost::asio::ssl::context & ct
         return;
     }
 
-    m_acceptor.set_option(boost::asio::socket_base::reuse_address(true));
+    m_acceptor.set_option(boost::asio::socket_base::reuse_address(true), ec);
     if (ec)
     {
         m_service->on_error("listener", "reuse", ec.value(), ec.message().c_str());
@@ -59,20 +60,15 @@ Listener::Listener(boost::asio::io_context & ioc, boost::asio::ssl::context & ct
 
 void Listener::run()
 {
-    if (!m_acceptor.is_open())
-    {
-        return;
-    }
-
     accept();
 }
 
 void Listener::accept()
 {
-    m_acceptor.async_accept(m_socket, std::bind(&Listener::on_accept, shared_from_this(), std::placeholders::_1));
+    m_acceptor.async_accept(boost::asio::make_strand(m_ioc), boost::beast::bind_front_handler(&Listener::on_accept, shared_from_this()));
 }
 
-void Listener::on_accept(boost::system::error_code ec)
+void Listener::on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::socket socket)
 {
     if (ec)
     {
@@ -80,7 +76,7 @@ void Listener::on_accept(boost::system::error_code ec)
     }
     else
     {
-        std::make_shared<DetectSession>(std::move(m_socket), m_ctx, m_doc_root, m_timeout, m_protocol, m_service)->run();
+        std::make_shared<DetectSession>(std::move(socket), m_ctx, m_doc_root, m_timeout, m_body_limit, m_protocol, m_service)->run();
     }
 
     accept();

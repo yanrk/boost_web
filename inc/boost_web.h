@@ -4,8 +4,8 @@
  * Author      : yanrk
  * Email       : yanrkchina@163.com
  * Blog        : blog.csdn.net/cxxmaker
- * Version     : 1.0
- * Copyright(C): 2018
+ * Version     : 2.0
+ * Copyright(C): 2019 - 2020
  ********************************************************/
 
 #ifndef BOOST_WEB_H
@@ -235,6 +235,7 @@ struct BOOST_WEB_API ServiceNode
     unsigned short   port;
     const char     * root;
     std::size_t      timeout;
+    uint64_t         body_limit;
     unsigned char    protocol;
 };
 

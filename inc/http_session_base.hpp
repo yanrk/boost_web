@@ -4,8 +4,8 @@
 * Author      : yanrk
 * Email       : yanrkchina@163.com
 * Blog        : blog.csdn.net/cxxmaker
-* Version     : 1.0
-* Copyright(C): 2018
+* Version     : 2.0
+* Copyright(C): 2019 - 2020
 ********************************************************/
 
 #ifndef BOOST_WEB_HTTP_SESSION_BASE_HPP
@@ -16,12 +16,14 @@
 #include <vector>
 #include <chrono>
 #include <functional>
-#include <boost/beast/core.hpp>
-#include <boost/beast/websocket.hpp>
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/asio/steady_timer.hpp>
+#include <boost/beast/core.hpp>
+#include <boost/beast/ssl.hpp>
+#include <boost/beast/websocket.hpp>
 #include <boost/make_unique.hpp>
+#include <boost/optional/optional.hpp>
 #include "websocket_session_base.hpp"
 #include "websocket_session_plain.h"
 #include "websocket_session_ssl.h"
@@ -35,7 +37,7 @@ template <class Derived>
 class HttpSessionBase : public HttpConnectionBase
 {
 public:
-    explicit HttpSessionBase(boost::asio::io_context & ioc, boost::beast::flat_buffer buffer, const std::string & doc_root, Address address, std::chrono::seconds timeout, unsigned char protocol, WebServiceBase * service);
+    explicit HttpSessionBase(boost::beast::flat_buffer buffer, const std::shared_ptr<const std::string> & doc_root, Address address, std::chrono::seconds timeout, uint64_t body_limit, unsigned char protocol, WebServiceBase * service);
 
 public:
     virtual void get_host_address(std::string & ip, unsigned short & port) const override;
@@ -45,21 +47,16 @@ public:
     void recv();
 
 protected:
-    void start_timer();
-
-protected:
-    void on_timer(boost::system::error_code ec);
-    void on_recv(boost::system::error_code ec);
-    void on_send(boost::system::error_code ec, bool close);
+    void on_recv(boost::beast::error_code ec, std::size_t bytes_transferred);
+    void on_send(bool close, boost::beast::error_code ec, std::size_t bytes_transferred);
 
 private:
     Derived & derived();
 
 protected:
-    boost::asio::strand<boost::asio::io_context::executor_type>                 m_strand;
-    boost::asio::steady_timer                                                   m_timer;
     Address                                                                     m_address;
     std::chrono::seconds                                                        m_timeout;
+    uint64_t                                                                    m_body_limit;
     unsigned char                                                               m_protocol;
     WebServiceBase                                                            * m_service;
     boost::beast::flat_buffer                                                   m_recv_buffer;
@@ -93,9 +90,9 @@ private:
         std::vector<std::unique_ptr<Work>>      m_work_items;
     };
 
-    const std::string                                                         & m_doc_root;
-    boost::beast::http::request<boost::beast::http::string_body>                m_request;
-    WorkQueue                                                                   m_work_queue;
+    std::shared_ptr<const std::string>                                                      m_doc_root;
+    boost::optional<boost::beast::http::request_parser<boost::beast::http::string_body>>    m_parser;
+    WorkQueue                                                                               m_work_queue;
 };
 
 template <class Derived>
@@ -141,7 +138,7 @@ void HttpSessionBase<Derived>::WorkQueue::operator () (boost::beast::http::messa
 
         virtual void operator () ()
         {
-            boost::beast::http::async_write(m_http.derived().stream(), m_request, boost::asio::bind_executor(m_http.m_strand, std::bind(&HttpSessionBase::on_send, m_http.derived().shared_from_this(), std::placeholders::_1, m_request.need_eof())));
+            boost::beast::http::async_write(m_http.derived().stream(), m_request, boost::beast::bind_front_handler(&HttpSessionBase::on_send, m_http.derived().shared_from_this(), m_request.need_eof()));
         }
 
         HttpSessionBase                                       & m_http;
@@ -157,16 +154,15 @@ void HttpSessionBase<Derived>::WorkQueue::operator () (boost::beast::http::messa
 }
 
 template <class Derived>
-HttpSessionBase<Derived>::HttpSessionBase(boost::asio::io_context & ioc, boost::beast::flat_buffer buffer, const std::string & doc_root, Address address, std::chrono::seconds timeout, unsigned char protocol, WebServiceBase * service)
-    : m_strand(ioc.get_executor())
-    , m_timer(ioc, (std::chrono::steady_clock::time_point::max)())
-    , m_address(std::move(address))
+HttpSessionBase<Derived>::HttpSessionBase(boost::beast::flat_buffer buffer, const std::shared_ptr<const std::string> & doc_root, Address address, std::chrono::seconds timeout, uint64_t body_limit, unsigned char protocol, WebServiceBase * service)
+    : m_address(std::move(address))
     , m_timeout(std::move(timeout))
+    , m_body_limit(body_limit)
     , m_protocol(protocol)
     , m_service(service)
     , m_recv_buffer(std::move(buffer))
     , m_doc_root(doc_root)
-    , m_request()
+    , m_parser()
     , m_work_queue(*this)
 {
     BOOST_ASSERT(nullptr != service);
@@ -193,44 +189,24 @@ void HttpSessionBase<Derived>::get_peer_address(std::string & ip, unsigned short
 }
 
 template <class Derived>
-void HttpSessionBase<Derived>::start_timer()
-{
-    m_timer.expires_at((std::chrono::steady_clock::time_point::max)());
-
-    m_timer.async_wait(boost::asio::bind_executor(m_strand, std::bind(&HttpSessionBase::on_timer, derived().shared_from_this(), std::placeholders::_1)));
-}
-
-template <class Derived>
 void HttpSessionBase<Derived>::recv()
 {
-    m_timer.expires_after(m_timeout);
+    m_parser.emplace();
 
-    m_request = {};
+    if (0 != m_body_limit)
+    {
+        m_parser->body_limit(m_body_limit);
+    }
 
-    boost::beast::http::async_read(derived().stream(), m_recv_buffer, m_request, boost::asio::bind_executor(m_strand, std::bind(&HttpSessionBase::on_recv, derived().shared_from_this(), std::placeholders::_1)));
+    boost::beast::get_lowest_layer(derived().stream()).expires_after(m_timeout);
+    boost::beast::http::async_read(derived().stream(), m_recv_buffer, *m_parser, boost::beast::bind_front_handler(&HttpSessionBase::on_recv, derived().shared_from_this()));
 }
 
 template <class Derived>
-void HttpSessionBase<Derived>::on_timer(boost::system::error_code ec)
+void HttpSessionBase<Derived>::on_recv(boost::beast::error_code ec, std::size_t bytes_transferred)
 {
-    if (ec && boost::asio::error::operation_aborted != ec)
-    {
-        m_service->on_error(derived().protocol(), "timer", ec.value(), ec.message().c_str());
-        return;
-    }
+    boost::ignore_unused(bytes_transferred);
 
-    if (m_timer.expiry() <= std::chrono::steady_clock::now())
-    {
-        derived().timeout();
-        return;
-    }
-
-    m_timer.async_wait(boost::asio::bind_executor(m_strand, std::bind(&HttpSessionBase::on_timer, derived().shared_from_this(), std::placeholders::_1)));
-}
-
-template <class Derived>
-void HttpSessionBase<Derived>::on_recv(boost::system::error_code ec)
-{
     if (boost::beast::http::error::end_of_stream == ec)
     {
         derived().eof();
@@ -239,14 +215,14 @@ void HttpSessionBase<Derived>::on_recv(boost::system::error_code ec)
 
     if (ec)
     {
-        if (boost::asio::error::operation_aborted != ec)
+        if (boost::asio::ssl::error::stream_truncated != ec)
         {
             m_service->on_error(derived().protocol(), "recv", ec.value(), ec.message().c_str());
         }
         return;
     }
 
-    if (boost::beast::websocket::is_upgrade(m_request))
+    if (boost::beast::websocket::is_upgrade(m_parser->get()))
     {
         if (0x0 == ((support_protocol_t::protocol_ws | support_protocol_t::protocol_wss) & (derived().max_support_protocol() & m_protocol)))
         {
@@ -254,7 +230,8 @@ void HttpSessionBase<Derived>::on_recv(boost::system::error_code ec)
         }
         else
         {
-            make_websocket_session(derived().release_stream(), std::move(m_address), std::move(m_timeout), m_service, std::move(m_request));
+            boost::beast::get_lowest_layer(derived().stream()).expires_never();
+            make_websocket_session(derived().release_stream(), std::move(m_address), m_service, m_parser->release());
         }
         return;
     }
@@ -265,7 +242,7 @@ void HttpSessionBase<Derived>::on_recv(boost::system::error_code ec)
         return;
     }
 
-    handle_request(m_service, m_doc_root, *this, std::move(m_request), m_work_queue);
+    handle_request(m_service, *m_doc_root, *this, m_parser->release(), m_work_queue);
 
     if (!m_work_queue.is_full())
     {
@@ -274,11 +251,13 @@ void HttpSessionBase<Derived>::on_recv(boost::system::error_code ec)
 }
 
 template <class Derived>
-void HttpSessionBase<Derived>::on_send(boost::system::error_code ec, bool close)
+void HttpSessionBase<Derived>::on_send(bool close, boost::beast::error_code ec, std::size_t bytes_transferred)
 {
+    boost::ignore_unused(bytes_transferred);
+
     if (ec)
     {
-        if (boost::asio::error::operation_aborted != ec)
+        if (boost::asio::ssl::error::stream_truncated != ec)
         {
             m_service->on_error(derived().protocol(), "send", ec.value(), ec.message().c_str());
         }

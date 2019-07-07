@@ -4,8 +4,8 @@
  * Author      : yanrk
  * Email       : yanrkchina@163.com
  * Blog        : blog.csdn.net/cxxmaker
- * Version     : 1.0
- * Copyright(C): 2018
+ * Version     : 2.0
+ * Copyright(C): 2019 - 2020
  ********************************************************/
 
 #ifndef BOOST_WEB_HTTP_SESSION_PLAIN_H
@@ -16,7 +16,6 @@
 #include <chrono>
 #include <memory>
 #include <type_traits>
-#include <boost/asio/ip/tcp.hpp>
 #include "http_session_base.hpp"
 
 namespace BoostWeb { // namespace BoostWeb begin
@@ -24,21 +23,20 @@ namespace BoostWeb { // namespace BoostWeb begin
 class HttpSession : public HttpSessionBase<HttpSession>, public std::enable_shared_from_this<HttpSession>
 {
 public:
-    HttpSession(boost::asio::ip::tcp::socket socket, boost::beast::flat_buffer buffer, const std::string & doc_root, Address address, std::chrono::seconds timeout, unsigned char protocol, WebServiceBase * service);
+    HttpSession(boost::beast::tcp_stream && stream, boost::beast::flat_buffer && buffer, const std::shared_ptr<const std::string> & doc_root, Address address, std::chrono::seconds timeout, uint64_t body_limit, unsigned char protocol, WebServiceBase * service);
 
 public:
-    boost::asio::ip::tcp::socket & stream();
-    boost::asio::ip::tcp::socket release_stream();
+    boost::beast::tcp_stream & stream();
+    boost::beast::tcp_stream release_stream();
     const char * protocol() const;
     support_protocol_t::value_t max_support_protocol() const;
 
 public:
     void run();
     void eof();
-    void timeout();
 
 private:
-    boost::asio::ip::tcp::socket                                                m_socket;
+    boost::beast::tcp_stream                                                    m_stream;
 };
 
 } // namespace BoostWeb end

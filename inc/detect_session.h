@@ -4,8 +4,8 @@
  * Author      : yanrk
  * Email       : yanrkchina@163.com
  * Blog        : blog.csdn.net/cxxmaker
- * Version     : 1.0
- * Copyright(C): 2018
+ * Version     : 2.0
+ * Copyright(C): 2019 - 2020
  ********************************************************/
 
 #ifndef BOOST_WEB_DETECT_SESSION_H
@@ -17,11 +17,11 @@
 #include <memory>
 #include <boost/logic/tribool.hpp>
 #include <boost/asio/ssl.hpp>
-#include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/asio/io_context.hpp>
 #include <boost/asio/bind_executor.hpp>
-#include "common/detect_ssl.hpp"
+#include <boost/beast/core.hpp>
+#include <boost/beast/ssl.hpp>
 #include "address.h"
 #include "boost_web.h"
 
@@ -30,22 +30,22 @@ namespace BoostWeb { // namespace BoostWeb begin
 class DetectSession : public std::enable_shared_from_this<DetectSession>
 {
 public:
-    explicit DetectSession(boost::asio::ip::tcp::socket socket, boost::asio::ssl::context & ctx, const std::string & doc_root, std::size_t timeout, unsigned char protocol, WebServiceBase * service);
+    explicit DetectSession(boost::asio::ip::tcp::socket && socket, boost::asio::ssl::context & ctx, const std::shared_ptr<const std::string> & doc_root, std::size_t timeout, uint64_t body_limit, unsigned char protocol, WebServiceBase * service);
 
 public:
     void run();
 
 private:
-    void on_detect(boost::system::error_code ec, boost::tribool result);
+    void on_detect(boost::beast::error_code ec, boost::tribool result);
 
 private:
-    boost::asio::ip::tcp::socket                                                m_socket;
+    boost::beast::tcp_stream                                                    m_stream;
     boost::asio::ssl::context                                                 & m_ctx;
-    boost::asio::strand<boost::asio::io_context::executor_type>                 m_strand;
-    const std::string                                                         & m_doc_root;
+    std::shared_ptr<const std::string>                                          m_doc_root;
     boost::beast::flat_buffer                                                   m_buffer;
     Address                                                                     m_address;
     std::chrono::seconds                                                        m_timeout;
+    uint64_t                                                                    m_body_limit;
     unsigned char                                                               m_protocol;
     WebServiceBase                                                            * m_service;
 };

@@ -4,8 +4,8 @@
  * Author      : yanrk
  * Email       : yanrkchina@163.com
  * Blog        : blog.csdn.net/cxxmaker
- * Version     : 1.0
- * Copyright(C): 2018
+ * Version     : 2.0
+ * Copyright(C): 2019 - 2020
  ********************************************************/
 
 #include <cstring>
@@ -13,7 +13,6 @@
 #include <type_traits>
 #include <boost/assert.hpp>
 #include <boost/asio/buffer.hpp>
-#include <boost/asio/ip/tcp.hpp>
 #include <boost/asio/ssl/context.hpp>
 #include <boost/functional/factory.hpp>
 #include "listener.h"
@@ -53,7 +52,7 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
     unsigned char unsupported_protocols = support_protocol_t::protocol_ssl;
     if (nullptr != crt_file_or_buffer && nullptr != key_file_or_buffer)
     {
-        m_ssl_context.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::no_sslv2);
+        m_ssl_context.set_options(boost::asio::ssl::context::default_workarounds | boost::asio::ssl::context::no_sslv2 | boost::asio::ssl::context::no_sslv3 | boost::asio::ssl::context::no_tlsv1);
         try
         {
             if (pass_file_not_buffer)
@@ -67,7 +66,7 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
                 m_ssl_context.use_private_key(boost::asio::buffer(key_file_or_buffer, strlen(key_file_or_buffer)), boost::asio::ssl::context::file_format::pem);
             }
         }
-        catch (boost::system::error_code & ec)
+        catch (boost::beast::error_code & ec)
         {
             m_web_service->on_error("ssl", "file", ec.value(), ec.message().c_str());
             return (false);
@@ -88,7 +87,7 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
     int signal_interrupt = SIGINT;
     int signal_terminate = SIGTERM;
     m_signal_sets.push_back(boost::factory<boost::asio::signal_set *>()(m_io_contexts.back(), signal_interrupt, signal_terminate));
-    m_signal_sets.back().async_wait([this](const boost::system::error_code &, int) { this->m_io_contexts.back().stop(); });
+    m_signal_sets.back().async_wait([this](const boost::beast::error_code &, int) { this->m_io_contexts.back().stop(); });
 
     for (std::size_t index = 0; index < service_count; ++index)
     {
@@ -102,7 +101,7 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
             m_web_service->on_error("init", "protocol", 1, "no support protocol");
             return (false);
         }
-        std::make_shared<Listener>(m_io_contexts.back(), m_ssl_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(service_node.host), service_node.port), service_node.root, std::max<std::size_t>(15, service_node.timeout), protocol, m_web_service)->run();
+        std::make_shared<Listener>(m_io_contexts.back(), m_ssl_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(service_node.host), service_node.port), std::make_shared<std::string>(service_node.root), service_node.timeout, service_node.body_limit, protocol, m_web_service)->run();
     }
 
     auto thread_func = [this] { this->m_io_contexts.back().run(); };

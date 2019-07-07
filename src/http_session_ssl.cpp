@@ -4,27 +4,27 @@
  * Author      : yanrk
  * Email       : yanrkchina@163.com
  * Blog        : blog.csdn.net/cxxmaker
- * Version     : 1.0
- * Copyright(C): 2018
+ * Version     : 2.0
+ * Copyright(C): 2019 - 2020
  ********************************************************/
 
 #include "http_session_ssl.h"
 
 namespace BoostWeb { // namespace BoostWeb begin
 
-HttpsSession::HttpsSession(boost::asio::ip::tcp::socket socket, boost::asio::ssl::context & ctx, boost::beast::flat_buffer buffer, const std::string & doc_root, Address address, std::chrono::seconds timeout, unsigned char protocol, WebServiceBase * service)
-    : HttpSessionBase<HttpsSession>(socket.get_executor().context(), std::move(buffer), doc_root, std::move(address), std::move(timeout), protocol, service)
-    , m_stream(std::move(socket), ctx)
+HttpsSession::HttpsSession(boost::beast::tcp_stream && stream, boost::asio::ssl::context & ctx, boost::beast::flat_buffer && buffer, const std::shared_ptr<const std::string> & doc_root, Address address, std::chrono::seconds timeout, uint64_t body_limit, unsigned char protocol, WebServiceBase * service)
+    : HttpSessionBase<HttpsSession>(std::move(buffer), doc_root, std::move(address), std::move(timeout), body_limit, protocol, service)
+    , m_stream(std::move(stream), ctx)
 {
 
 }
 
-ssl_stream<boost::asio::ip::tcp::socket> & HttpsSession::stream()
+boost::beast::ssl_stream<boost::beast::tcp_stream> & HttpsSession::stream()
 {
     return (m_stream);
 }
 
-ssl_stream<boost::asio::ip::tcp::socket> HttpsSession::release_stream()
+boost::beast::ssl_stream<boost::beast::tcp_stream> HttpsSession::release_stream()
 {
     return (std::move(m_stream));
 }
@@ -41,42 +41,26 @@ support_protocol_t::value_t HttpsSession::max_support_protocol() const
 
 void HttpsSession::run()
 {
-    start_timer();
-
-    m_timer.expires_after(m_timeout);
+    boost::beast::get_lowest_layer(m_stream).expires_after(m_timeout);
 
     /*
      * this is the buffered version of the handshake
      */
-    m_stream.async_handshake(boost::asio::ssl::stream_base::server, m_recv_buffer.data(), boost::asio::bind_executor(m_strand, std::bind(&HttpsSession::on_handshake, shared_from_this(), std::placeholders::_1, std::placeholders::_2)));
+    m_stream.async_handshake(boost::asio::ssl::stream_base::server, m_recv_buffer.data(), boost::beast::bind_front_handler(&HttpsSession::on_handshake, shared_from_this()));
 }
 
 void HttpsSession::eof()
 {
-    m_eof = true;
+    boost::beast::get_lowest_layer(m_stream).expires_after(m_timeout);
 
-    m_timer.expires_after(m_timeout);
-
-    m_stream.async_shutdown(boost::asio::bind_executor(m_strand, std::bind(&HttpsSession::on_shutdown, shared_from_this(), std::placeholders::_1)));
+    m_stream.async_shutdown(boost::beast::bind_front_handler(&HttpsSession::on_shutdown, shared_from_this()));
 }
 
-void HttpsSession::timeout()
-{
-    if (m_eof)
-    {
-        return;
-    }
-
-    start_timer();
-
-    eof();
-}
-
-void HttpsSession::on_handshake(boost::system::error_code ec, std::size_t bytes_used)
+void HttpsSession::on_handshake(boost::beast::error_code ec, std::size_t bytes_used)
 {
     if (ec)
     {
-        if (boost::asio::error::operation_aborted != ec)
+        if (boost::asio::ssl::error::stream_truncated != ec)
         {
             m_service->on_error(protocol(), "handshake", ec.value(), ec.message().c_str());
         }
@@ -91,9 +75,9 @@ void HttpsSession::on_handshake(boost::system::error_code ec, std::size_t bytes_
     recv();
 }
 
-void HttpsSession::on_shutdown(boost::system::error_code ec)
+void HttpsSession::on_shutdown(boost::beast::error_code ec)
 {
-    if (ec && boost::asio::error::operation_aborted != ec)
+    if (ec && boost::asio::ssl::error::stream_truncated != ec)
     {
         m_service->on_error(protocol(), "shutdown", ec.value(), ec.message().c_str());
     }

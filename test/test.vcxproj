@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="dll_debug|Win32">
       <Configuration>dll_debug</Configuration>
@@ -45,60 +45,60 @@
     <ProjectGuid>{A468EB88-FC23-479D-9DE0-57D963B55F3C}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>net_test</RootNamespace>
-    <WindowsTargetPlatformVersion>8.1</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='lib_debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='lib_debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='dll_debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='dll_debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='lib_release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='lib_release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='dll_release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='dll_release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
-    <PlatformToolset>v140</PlatformToolset>
+    <PlatformToolset>v141</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -175,15 +175,15 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;../inc/;../../boost/boost_1_67_0/inc/;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../inc/;../../gnu_libs/boost/boost_1_70_0/inc/;</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4996;</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../lib/windows/$(configuration)/;../../boost/boost_1_67_0/lib/windows/$(configuration)/;../../gnu_libs/openssl/lib/windows/lib/;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;boost_web.lib;libeay32.lib;ssleay32.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../lib/windows/$(configuration)/;../../gnu_libs/boost/boost_1_70_0/lib/windows/$(configuration)/;../../gnu_libs/openssl/lib/windows/$(configuration)/;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ws2_32.lib;boost_web.lib;libssl.lib;libcrypto.lib;</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
       <Command>
@@ -197,15 +197,15 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;../inc/;../../boost/boost_1_67_0/inc/;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../inc/;../../gnu_libs/boost/boost_1_70_0/inc/;</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4996;</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../lib/windows/$(configuration)_x64/;../../boost/boost_1_67_0/lib/windows/$(configuration)_x64/;../../gnu_libs/openssl/lib/windows/lib_x64/;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;boost_web.lib;libeay32.lib;ssleay32.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../lib/windows/$(configuration)_x64/;../../gnu_libs/boost/boost_1_70_0/lib/windows/$(configuration)_x64/;../../gnu_libs/openssl/lib/windows/$(configuration)_x64/;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ws2_32.lib;boost_web.lib;libssl.lib;libcrypto.lib;</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
       <Command>
@@ -219,19 +219,19 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_STUPID_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;../inc/;../../boost/boost_1_67_0/inc/;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../inc/;../../gnu_libs/boost/boost_1_70_0/inc/;</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4996;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../lib/windows/$(configuration)/;../../boost/boost_1_67_0/lib/windows/$(configuration)/;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../lib/windows/$(configuration)/;../../gnu_libs/boost/boost_1_70_0/lib/windows/$(configuration)/;</AdditionalLibraryDirectories>
       <AdditionalDependencies>ws2_32.lib;boost_web.lib;</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
       <Command>
         copy ..\lib\windows\$(configuration)\*  .\bin\windows\$(configuration)\;
-        copy ..\..\gnu_libs\openssl\lib\windows\dll\*.dll .\bin\windows\$(configuration)\;
+        copy ..\..\gnu_libs\openssl\lib\windows\$(configuration)\*.dll .\bin\windows\$(configuration)\;
       </Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
@@ -242,19 +242,19 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;USE_STUPID_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;../inc/;../../boost/boost_1_67_0/inc/;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../inc/;../../gnu_libs/boost/boost_1_70_0/inc/;</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4996;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>../lib/windows/$(configuration)_x64/;../../boost/boost_1_67_0/lib/windows/$(configuration)_x64/;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../lib/windows/$(configuration)_x64/;../../gnu_libs/boost/boost_1_70_0/lib/windows/$(configuration)_x64/;</AdditionalLibraryDirectories>
       <AdditionalDependencies>ws2_32.lib;boost_web.lib;</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
       <Command>
         copy ..\lib\windows\$(configuration)_x64\*  .\bin\windows\$(configuration)_x64\;
-        copy ..\..\gnu_libs\openssl\lib\windows\dll_x64\*.dll .\bin\windows\$(configuration)_x64\;
+        copy ..\..\gnu_libs\openssl\lib\windows\$(configuration)_x64\*.dll .\bin\windows\$(configuration)_x64\;
       </Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
@@ -267,7 +267,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;../inc/;../../boost/boost_1_67_0/inc/;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../inc/;../../gnu_libs/boost/boost_1_70_0/inc/;</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4996;</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -276,8 +276,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>../lib/windows/$(configuration)/;../../boost/boost_1_67_0/lib/windows/$(configuration)/;../../gnu_libs/openssl/lib/windows/lib/;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;boost_web.lib;libeay32.lib;ssleay32.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../lib/windows/$(configuration)/;../../gnu_libs/boost/boost_1_70_0/lib/windows/$(configuration)/;../../gnu_libs/openssl/lib/windows/$(configuration)/;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ws2_32.lib;boost_web.lib;libssl.lib;libcrypto.lib;</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
       <Command>
@@ -293,7 +293,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;../inc/;../../boost/boost_1_67_0/inc/;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../inc/;../../gnu_libs/boost/boost_1_70_0/inc/;</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4996;</DisableSpecificWarnings>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
@@ -302,8 +302,8 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>../lib/windows/$(configuration)_x64/;../../boost/boost_1_67_0/lib/windows/$(configuration)_x64/;../../gnu_libs/openssl/lib/windows/lib_x64/;</AdditionalLibraryDirectories>
-      <AdditionalDependencies>ws2_32.lib;boost_web.lib;libeay32.lib;ssleay32.lib;</AdditionalDependencies>
+      <AdditionalLibraryDirectories>../lib/windows/$(configuration)_x64/;../../gnu_libs/boost/boost_1_70_0/lib/windows/$(configuration)_x64/;../../gnu_libs/openssl/lib/windows/$(configuration)_x64/;</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ws2_32.lib;boost_web.lib;libssl.lib;libcrypto.lib;</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
       <Command>
@@ -319,7 +319,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_STUPID_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;../inc/;../../boost/boost_1_67_0/inc/;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../inc/;../../gnu_libs/boost/boost_1_70_0/inc/;</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4996;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -327,13 +327,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>../lib/windows/$(configuration)/;../../boost/boost_1_67_0/lib/windows/$(configuration)/;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../lib/windows/$(configuration)/;../../gnu_libs/boost/boost_1_70_0/lib/windows/$(configuration)/;</AdditionalLibraryDirectories>
       <AdditionalDependencies>ws2_32.lib;boost_web.lib;</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
       <Command>
         copy ..\lib\windows\$(configuration)\*  .\bin\windows\$(configuration)\;
-        copy ..\..\gnu_libs\openssl\lib\windows\dll\*.dll .\bin\windows\$(configuration)\;
+        copy ..\..\gnu_libs\openssl\lib\windows\$(configuration)\*.dll .\bin\windows\$(configuration)\;
       </Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>
@@ -346,7 +346,7 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;USE_STUPID_DLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>./;../inc/;../../boost/boost_1_67_0/inc/;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>./;../inc/;../../gnu_libs/boost/boost_1_70_0/inc/;</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>4251;4996;</DisableSpecificWarnings>
     </ClCompile>
     <Link>
@@ -354,13 +354,13 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalLibraryDirectories>../lib/windows/$(configuration)_x64/;../../boost/boost_1_67_0/lib/windows/$(configuration)_x64/;</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>../lib/windows/$(configuration)_x64/;../../gnu_libs/boost/boost_1_70_0/lib/windows/$(configuration)_x64/;</AdditionalLibraryDirectories>
       <AdditionalDependencies>ws2_32.lib;boost_web.lib;</AdditionalDependencies>
     </Link>
     <PreLinkEvent>
       <Command>
         copy ..\lib\windows\$(configuration)_x64\*  .\bin\windows\$(configuration)_x64\;
-        copy ..\..\gnu_libs\openssl\lib\windows\dll_x64\*.dll .\bin\windows\$(configuration)_x64\;
+        copy ..\..\gnu_libs\openssl\lib\windows\$(configuration)_x64\*.dll .\bin\windows\$(configuration)_x64\;
       </Command>
     </PreLinkEvent>
   </ItemDefinitionGroup>

@@ -13,9 +13,6 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="inc\common">
-      <UniqueIdentifier>{cd7e19b6-26b0-44b3-a7a7-99b8c0b8a1e7}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="boost_web.rc">
@@ -23,12 +20,6 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\inc\common\detect_ssl.hpp">
-      <Filter>inc\common</Filter>
-    </ClInclude>
-    <ClInclude Include="..\inc\common\ssl_stream.hpp">
-      <Filter>inc\common</Filter>
-    </ClInclude>
     <ClInclude Include="..\inc\address.h">
       <Filter>inc</Filter>
     </ClInclude>

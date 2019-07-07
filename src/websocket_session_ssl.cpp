@@ -4,63 +4,29 @@
  * Author      : yanrk
  * Email       : yanrkchina@163.com
  * Blog        : blog.csdn.net/cxxmaker
- * Version     : 1.0
- * Copyright(C): 2018
+ * Version     : 2.0
+ * Copyright(C): 2019 - 2020
  ********************************************************/
 
 #include "websocket_session_ssl.h"
 
 namespace BoostWeb { // namespace BoostWeb begin
 
-WebsocketsSession::WebsocketsSession(ssl_stream<boost::asio::ip::tcp::socket> stream, Address address, std::chrono::seconds timeout, WebServiceBase * service)
-    : WebsocketSessionBase<WebsocketsSession>(stream.get_executor().context(), std::move(address), std::move(timeout), service)
-    , m_websockets(std::move(stream))
-    , m_eof(false)
+WebsocketsSession::WebsocketsSession(boost::beast::ssl_stream<boost::beast::tcp_stream> && stream, Address address, WebServiceBase * service)
+    : WebsocketSessionBase<WebsocketsSession>(std::move(address), service)
+    , m_websocket(std::move(stream))
 {
 
 }
 
-boost::beast::websocket::stream<ssl_stream<boost::asio::ip::tcp::socket>> & WebsocketsSession::websocket()
+boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>> & WebsocketsSession::websocket()
 {
-    return (m_websockets);
-}
-
-boost::asio::ip::tcp::socket & WebsocketsSession::socket()
-{
-    return (m_websockets.next_layer().next_layer());
+    return (m_websocket);
 }
 
 const char * WebsocketsSession::protocol() const
 {
     return ("wss");
-}
-
-void WebsocketsSession::timeout()
-{
-    if (m_eof)
-    {
-        return;
-    }
-
-    m_eof = true;
-
-    start_timer();
-
-    m_timer.expires_after(m_timeout);
-
-    m_websockets.next_layer().async_shutdown(boost::asio::bind_executor(m_strand, std::bind(&WebsocketsSession::on_shutdown, shared_from_this(), std::placeholders::_1)));
-}
-
-void WebsocketsSession::on_shutdown(boost::system::error_code ec)
-{
-    if (ec && boost::asio::error::operation_aborted != ec)
-    {
-        m_service->on_error(shared_from_this(), protocol(), "shutdown", ec.value(), ec.message().c_str());
-    }
-    else
-    {
-        m_service->on_close(shared_from_this());
-    }
 }
 
 } // namespace BoostWeb end

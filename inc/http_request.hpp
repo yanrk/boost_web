@@ -4,8 +4,8 @@
  * Author      : yanrk
  * Email       : yanrkchina@163.com
  * Blog        : blog.csdn.net/cxxmaker
- * Version     : 1.0
- * Copyright(C): 2018
+ * Version     : 2.0
+ * Copyright(C): 2019 - 2020
  ********************************************************/
 
 #ifndef BOOST_WEB_HTTP_REQUEST_HPP
@@ -60,7 +60,7 @@ http_method_t::value_t HttpRequest<Body, Fields>::get_method() const
 template <class Body, class Fields>
 std::string HttpRequest<Body, Fields>::get_method_string() const
 {
-    return (m_message.method_string().to_string());
+    return (std::string(m_message.method_string()));
 }
 
 template <class Body, class Fields>
@@ -72,7 +72,7 @@ void HttpRequest<Body, Fields>::set_target(const std::string & http_target)
 template <class Body, class Fields>
 std::string HttpRequest<Body, Fields>::get_target() const
 {
-    return (m_message.target().to_string());
+    return (std::string(m_message.target()));
 }
 
 } // namespace BoostWeb end
