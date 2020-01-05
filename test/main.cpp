@@ -2,7 +2,7 @@
 
 int main(int, char *[])
 {
-    TestService server(10000, 10);
+    TestService server(true, 1000, 10);
 
     server.init();
 

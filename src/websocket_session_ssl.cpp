@@ -19,6 +19,13 @@ WebsocketsSession::WebsocketsSession(boost::beast::ssl_stream<boost::beast::tcp_
 
 }
 
+WebsocketsSession::WebsocketsSession(boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>> && stream, Address address, WebServiceBase * service)
+    : WebsocketSessionBase<WebsocketsSession>(std::move(address), service)
+    , m_websocket(std::move(stream))
+{
+
+}
+
 boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>> & WebsocketsSession::websocket()
 {
     return (m_websocket);
@@ -27,6 +34,11 @@ boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_strea
 const char * WebsocketsSession::protocol() const
 {
     return ("wss");
+}
+
+void make_websocket_session(boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>> stream, Address address, WebServiceBase * service, std::size_t identity)
+{
+    std::make_shared<WebsocketsSession>(std::move(stream), std::move(address), service)->run(identity);
 }
 
 } // namespace BoostWeb end

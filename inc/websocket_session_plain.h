@@ -23,6 +23,7 @@ class WebsocketSession : public WebsocketSessionBase<WebsocketSession>, public s
 {
 public:
     explicit WebsocketSession(boost::beast::tcp_stream && stream, Address address, WebServiceBase * service);
+    explicit WebsocketSession(boost::beast::websocket::stream<boost::beast::tcp_stream> && stream, Address address, WebServiceBase * service);
 
 public:
     boost::beast::websocket::stream<boost::beast::tcp_stream> & websocket();
@@ -37,6 +38,8 @@ void make_websocket_session(boost::beast::tcp_stream stream, Address address, We
 {
     std::make_shared<WebsocketSession>(std::move(stream), std::move(address), service)->run(std::move(req));
 }
+
+void make_websocket_session(boost::beast::websocket::stream<boost::beast::tcp_stream> stream, Address address, WebServiceBase * service, std::size_t identity);
 
 } // namespace BoostWeb end
 

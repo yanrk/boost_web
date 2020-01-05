@@ -9,7 +9,7 @@
 class TestService : public BoostWeb::WebServiceBase
 {
 public:
-    TestService(std::size_t send_times, std::size_t connection_count);
+    TestService(bool server, std::size_t send_times, std::size_t connection_count);
     virtual ~TestService();
 
 public:
@@ -47,6 +47,7 @@ private:
     void parse_file_body(const std::string & boundary, const std::string & body);
 
 private:
+    bool                                                        m_server;
     std::size_t                                                 m_max_msg_cnt;
     std::size_t                                                 m_max_connection_cnt;
     std::atomic_long                                            m_connect_count;

@@ -7,8 +7,9 @@
 static const char msg_blk[] = "this is a message\n";
 static const std::size_t msg_len = sizeof(msg_blk) / sizeof(msg_blk[0]) - 1;
 
-TestService::TestService(std::size_t send_times, std::size_t connection_count)
-    : m_max_msg_cnt(send_times)
+TestService::TestService(bool server, std::size_t send_times, std::size_t connection_count)
+    : m_server(server)
+    , m_max_msg_cnt(send_times)
     , m_max_connection_cnt(connection_count)
     , m_connect_count(0)
     , m_disconnect_count(0)
@@ -75,7 +76,7 @@ void TestService::on_error(const char * protocol, const char * what, int error, 
 
 bool TestService::on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, std::size_t identity)
 {
-    return (false);
+    return (insert_connection(connection) && send_message(connection));
 }
 
 bool TestService::on_accept(BoostWeb::WebsocketConnectionSharedPtr connection, unsigned short listener_port)
@@ -229,6 +230,8 @@ bool TestService::send_message(BoostWeb::WebsocketConnectionSharedPtr connection
 
     connection->set_user_data(reinterpret_cast<void *>(count));
 
+    printf("send %llu\n", count);
+
     return (true);
 }
 
@@ -264,6 +267,10 @@ bool TestService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
         assert(false);
         return (false);
     }
+
+    std::size_t count = reinterpret_cast<std::size_t>(connection->get_user_data());
+
+    printf("recv %llu\n", count);
 
     if (!send_message(connection))
     {
@@ -303,19 +310,34 @@ bool TestService::check_message(BoostWeb::WebsocketConnectionSharedPtr connectio
 
 bool TestService::init()
 {
-    BoostWeb::ServiceNode server_node;
-    server_node.host = "0.0.0.0";
-    server_node.port = 12345;
-    server_node.root = "f:/codes_vs2015/munu/munu/www";
-    server_node.timeout = 15;
-    server_node.body_limit = 0;
-    server_node.protocol = BoostWeb::support_protocol_t::protocol_all;
     const char * crt_file = "f:/codes/codes/transmission/web_transmit_adapter/res/local.foxrenderfarm.com.crt";
     const char * key_file = "f:/codes/codes/transmission/web_transmit_adapter/res/local.foxrenderfarm.com.key";
-    if (!m_web_manager.init(this, &server_node, 1, true, crt_file, key_file, 1))
+    if (m_server)
     {
-        return (false);
+        BoostWeb::ServiceNode server_node;
+        server_node.host = "0.0.0.0";
+        server_node.port = 12345;
+        server_node.root = "f:/codes_vs2015/munu/munu/www";
+        server_node.timeout = 15;
+        server_node.body_limit = 0;
+        server_node.protocol = BoostWeb::support_protocol_t::protocol_all;
+        if (!m_web_manager.init(this, &server_node, 1, true, crt_file, key_file, 1))
+        {
+            return (false);
+        }
     }
+    else
+    {
+        if (!m_web_manager.init(this, nullptr, 0, true, crt_file, nullptr, 1))
+        {
+            return (false);
+        }
+        if (!m_web_manager.create_wss_client("127.0.0.1", "12345", "/", 66666, 30))
+        {
+            return (false);
+        }
+    }
+
     return (true);
 }
 

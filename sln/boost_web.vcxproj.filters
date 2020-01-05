@@ -65,6 +65,12 @@
     <ClInclude Include="..\inc\websocket_session_ssl.h">
       <Filter>inc</Filter>
     </ClInclude>
+    <ClInclude Include="..\inc\websocket_connector_plain.h">
+      <Filter>inc</Filter>
+    </ClInclude>
+    <ClInclude Include="..\inc\websocket_connector_ssl.h">
+      <Filter>inc</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\address.cpp">
@@ -95,6 +101,12 @@
       <Filter>src</Filter>
     </ClCompile>
     <ClCompile Include="..\src\websocket_session_ssl.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\websocket_connector_plain.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\websocket_connector_ssl.cpp">
       <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>

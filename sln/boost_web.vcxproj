@@ -49,6 +49,8 @@
     <ClInclude Include="..\inc\http_session_ssl.h" />
     <ClInclude Include="..\inc\http_utility.h" />
     <ClInclude Include="..\inc\listener.h" />
+    <ClInclude Include="..\inc\websocket_connector_plain.h" />
+    <ClInclude Include="..\inc\websocket_connector_ssl.h" />
     <ClInclude Include="..\inc\websocket_session_base.hpp" />
     <ClInclude Include="..\inc\websocket_session_plain.h" />
     <ClInclude Include="..\inc\websocket_session_ssl.h" />
@@ -61,6 +63,8 @@
     <ClCompile Include="..\src\http_session_ssl.cpp" />
     <ClCompile Include="..\src\http_utility.cpp" />
     <ClCompile Include="..\src\listener.cpp" />
+    <ClCompile Include="..\src\websocket_connector_plain.cpp" />
+    <ClCompile Include="..\src\websocket_connector_ssl.cpp" />
     <ClCompile Include="..\src\websocket_session_plain.cpp" />
     <ClCompile Include="..\src\websocket_session_ssl.cpp" />
     <ClCompile Include="..\src\web_manager.cpp" />

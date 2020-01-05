@@ -255,6 +255,12 @@ public:
     bool init(WebServiceBase * web_service, const ServiceNode * service_array, std::size_t service_count = 1, bool pass_file_not_buffer = true, const char * crt_file_or_buffer = nullptr, const char * key_file_or_buffer = nullptr, std::size_t thread_count = 5);
     void exit();
 
+public:
+    bool create_ws_client(const char * host, const char * port, const char * target, std::size_t identity, std::size_t timeout = 30);
+    bool create_ws_client(const char * host, unsigned short port, const char * target, std::size_t identity, std::size_t timeout = 30);
+    bool create_wss_client(const char * host, const char * port, const char * target, std::size_t identity, std::size_t timeout = 30);
+    bool create_wss_client(const char * host, unsigned short port, const char * target, std::size_t identity, std::size_t timeout = 30);
+
 private:
     WebManagerImpl                                * m_manager_impl;
 };

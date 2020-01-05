@@ -65,6 +65,7 @@ public:
 
 public:
     template <class Body, class Allocator> void run(boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>> req);
+    void run(std::size_t identity);
     void eof();
 
 public:
@@ -232,6 +233,18 @@ template <class Body, class Allocator>
 void WebsocketSessionBase<Derived>::run(boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>> req)
 {
     accept(std::move(req));
+}
+
+template <class Derived>
+void WebsocketSessionBase<Derived>::run(std::size_t identity)
+{
+    if (!m_service->on_connect(derived().shared_from_this(), identity))
+    {
+        close();
+        return;
+    }
+
+    recv();
 }
 
 template <class Derived>
