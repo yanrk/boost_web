@@ -304,14 +304,13 @@ void WebsocketSessionBase<Derived>::on_recv(boost::beast::error_code ec, std::si
 {
     boost::ignore_unused(bytes_transferred);
 
-    if (boost::asio::ssl::error::stream_truncated == ec || boost::beast::websocket::error::closed == ec)
+    if (ec)
     {
+        if (boost::asio::ssl::error::stream_truncated != ec && boost::beast::websocket::error::closed != ec)
+        {
+            m_service->on_error(derived().shared_from_this(), derived().protocol(), "recv", ec.value(), ec.message().c_str());
+        }
         close();
-        return;
-    }
-    else if (ec)
-    {
-        m_service->on_error(derived().shared_from_this(), derived().protocol(), "recv", ec.value(), ec.message().c_str());
         return;
     }
 
@@ -338,6 +337,7 @@ void WebsocketSessionBase<Derived>::on_send(boost::beast::error_code ec, std::si
         {
             m_service->on_error(derived().shared_from_this(), derived().protocol(), "send", ec.value(), ec.message().c_str());
         }
+        close();
         return;
     }
 
