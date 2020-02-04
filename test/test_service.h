@@ -9,7 +9,7 @@
 class TestService : public BoostWeb::WebServiceBase
 {
 public:
-    TestService(bool server, std::size_t send_times, std::size_t connection_count);
+    TestService(bool server, bool text, bool ssl, std::size_t send_times, std::size_t connection_count);
     virtual ~TestService();
 
 public:
@@ -48,6 +48,8 @@ private:
 
 private:
     bool                                                        m_server;
+    bool                                                        m_text;
+    bool                                                        m_ssl;
     std::size_t                                                 m_max_msg_cnt;
     std::size_t                                                 m_max_connection_cnt;
     std::atomic_long                                            m_connect_count;

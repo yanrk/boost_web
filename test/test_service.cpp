@@ -7,8 +7,10 @@
 static const char msg_blk[] = "this is a message\n";
 static const std::size_t msg_len = sizeof(msg_blk) / sizeof(msg_blk[0]) - 1;
 
-TestService::TestService(bool server, std::size_t send_times, std::size_t connection_count)
+TestService::TestService(bool server, bool text, bool ssl, std::size_t send_times, std::size_t connection_count)
     : m_server(server)
+    , m_text(text)
+    , m_ssl(ssl)
     , m_max_msg_cnt(send_times)
     , m_max_connection_cnt(connection_count)
     , m_connect_count(0)
@@ -76,12 +78,12 @@ void TestService::on_error(const char * protocol, const char * what, int error, 
 
 bool TestService::on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, std::size_t identity)
 {
-    return (insert_connection(connection) && send_message(connection));
+    return (!!connection && insert_connection(connection) && send_message(connection));
 }
 
 bool TestService::on_accept(BoostWeb::WebsocketConnectionSharedPtr connection, unsigned short listener_port)
 {
-    return (insert_connection(connection));
+    return (!!connection && insert_connection(connection));
 }
 
 bool TestService::on_recv(BoostWeb::WebsocketConnectionSharedPtr connection)
@@ -216,21 +218,21 @@ bool TestService::send_message(BoostWeb::WebsocketConnectionSharedPtr connection
 
     ++count;
 
+    connection->set_user_data(reinterpret_cast<void *>(count));
+
     std::string data(msg_len * count, '\0');
     for (std::size_t index = 0; index < count; ++index)
     {
         memcpy(&data[msg_len * index], msg_blk, msg_len);
     }
 
-    if (!connection->send_buffer_fill_len(true, data.c_str(), data.size()))
+    if (!connection->send_buffer_fill_len(m_text, data.c_str(), data.size()))
     {
         assert(false);
         return (false);
     }
 
-    connection->set_user_data(reinterpret_cast<void *>(count));
-
-    printf("send %llu\n", count);
+    printf("send %u\n", count);
 
     return (true);
 }
@@ -245,7 +247,7 @@ bool TestService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
         return (false);
     }
 
-    if (!connection->recv_buffer_data_is_text())
+    if (connection->recv_buffer_data_is_text() != m_text)
     {
         assert(false);
         return (false);
@@ -254,13 +256,11 @@ bool TestService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
     const char * data = reinterpret_cast<const char *>(connection->recv_buffer_data());
     std::size_t len = connection->recv_buffer_size();
 
-    /*
     if (!check_message(connection, data, len))
     {
         assert(false);
         return (false);
     }
-    */
 
     if (!connection->recv_buffer_drop_len(len))
     {
@@ -270,7 +270,7 @@ bool TestService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
 
     std::size_t count = reinterpret_cast<std::size_t>(connection->get_user_data());
 
-    printf("recv %llu\n", count);
+    printf("recv %u\n", count);
 
     if (!send_message(connection))
     {
@@ -288,6 +288,10 @@ bool TestService::check_message(BoostWeb::WebsocketConnectionSharedPtr connectio
         assert(false);
         return (false);
     }
+
+    ++count;
+
+    connection->set_user_data(reinterpret_cast<void *>(count));
 
     if (msg_len * count != len)
     {
@@ -332,9 +336,24 @@ bool TestService::init()
         {
             return (false);
         }
-        if (!m_web_manager.create_wss_client("127.0.0.1", "12345", "/", 66666, 30))
+        for (std::size_t index = 0; index < m_max_connection_cnt; ++index)
         {
-            return (false);
+            if (m_ssl)
+            {
+                if (!m_web_manager.create_wss_client("127.0.0.1", "12345", "/", 66666, 30))
+                {
+                    printf("create wss-client-%u failed\n", index);
+                    break;
+                }
+            }
+            else
+            {
+                if (!m_web_manager.create_ws_client("127.0.0.1", "12345", "/", 66666, 30))
+                {
+                    printf("create ws-client-%u failed\n", index);
+                    break;
+                }
+            }
         }
     }
 
