@@ -89,16 +89,16 @@ the files *test/test_service.h* and *echo/echo_service.h* have show you how to u
      ```
      
    - if the **TestService** is a pure **client** (only connect to other's ports, the sample service as a *ws / wss* client, **note** that **not support** *http / https* client)
-   
+     
      ```c++
      bool TestService::init()
-  {
+     {
          return (m_web_manager.init(this));
-  }
+     }
      ```
-  
+     
    - easy to connect the other server
-   
+     
      ```
      {
          const char * ws_host = "172.16.4.33";
@@ -113,9 +113,9 @@ the files *test/test_service.h* and *echo/echo_service.h* have show you how to u
      
          unsigned short ws_port_2 = 9002;
          std::size_t ws_identity_2 = 22222; /* when you need to identify the connection */
-      if (!m_ws_manager.create_ws_client(ws_host, ws_port_2, ws_root, ws_identity_2))
+         if (!m_ws_manager.create_ws_client(ws_host, ws_port_2, ws_root, ws_identity_2))
          {
-          return (false);
+             return (false);
          }
      
          const char * wss_host = "192.168.1.113";
@@ -140,7 +140,7 @@ the files *test/test_service.h* and *echo/echo_service.h* have show you how to u
      ```
    
    - easy to stop **TestService**
-   
+     
      ```c++
      void TestService::exit()
      {
