@@ -57,8 +57,8 @@ public:
     virtual bool recv_buffer_data_is_text() override;
     virtual const void * recv_buffer_data() override;
     virtual std::size_t recv_buffer_size() override;
-    virtual bool recv_buffer_drop_len(std::size_t len) override;
-    virtual bool send_buffer_fill_len(bool text, const void * data, std::size_t len) override;
+    virtual bool recv_buffer_drop() override;
+    virtual bool send_buffer_fill(bool text, const void * data, std::size_t len) override;
 
 public:
     virtual void close() override;
@@ -191,27 +191,18 @@ std::size_t WebsocketSessionBase<Derived>::recv_buffer_size()
 }
 
 template <class Derived>
-bool WebsocketSessionBase<Derived>::recv_buffer_drop_len(std::size_t len)
+bool WebsocketSessionBase<Derived>::recv_buffer_drop()
 {
     if (m_recv_queue.empty())
     {
         return (false);
     }
-
-    if (m_recv_queue.front().m_buffer.size() > len)
-    {
-        m_recv_queue.front().m_buffer.consume(len);
-    }
-    else
-    {
-        m_recv_queue.pop_front();
-    }
-
+    m_recv_queue.pop_front();
     return (true);
 }
 
 template <class Derived>
-bool WebsocketSessionBase<Derived>::send_buffer_fill_len(bool text, const void * data, std::size_t len)
+bool WebsocketSessionBase<Derived>::send_buffer_fill(bool text, const void * data, std::size_t len)
 {
     boost::beast::flat_buffer buffer;
     std::copy_n(reinterpret_cast<const char *>(0 != len ? data : ""), len, boost::asio::buffers_begin(buffer.prepare(len)));

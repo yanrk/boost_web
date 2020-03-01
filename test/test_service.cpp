@@ -226,7 +226,7 @@ bool TestService::send_message(BoostWeb::WebsocketConnectionSharedPtr connection
         memcpy(&data[msg_len * index], msg_blk, msg_len);
     }
 
-    if (!connection->send_buffer_fill_len(m_text, data.c_str(), data.size()))
+    if (!connection->send_buffer_fill(m_text, data.c_str(), data.size()))
     {
         assert(false);
         return (false);
@@ -262,7 +262,7 @@ bool TestService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
         return (false);
     }
 
-    if (!connection->recv_buffer_drop_len(len))
+    if (!connection->recv_buffer_drop())
     {
         assert(false);
         return (false);
@@ -332,7 +332,7 @@ bool TestService::init()
     }
     else
     {
-        if (!m_web_manager.init(this, nullptr, 0, true, crt_file, nullptr, 1))
+        if (!m_web_manager.init(this, nullptr, 0, true, nullptr, nullptr, 1))
         {
             return (false);
         }

@@ -100,7 +100,7 @@ bool EchoService::remove_connection(BoostWeb::WebsocketConnectionSharedPtr conne
 
 bool EchoService::send_message(BoostWeb::WebsocketConnectionSharedPtr connection, bool text, const void * data, std::size_t size)
 {
-    if (!connection->send_buffer_fill_len(text, data, size))
+    if (!connection->send_buffer_fill(text, data, size))
     {
         assert(false);
         return (false);
@@ -129,7 +129,7 @@ bool EchoService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
     bool text = connection->recv_buffer_data_is_text();
     std::string data(reinterpret_cast<const char *>(connection->recv_buffer_data()), connection->recv_buffer_size());
 
-    if (!connection->recv_buffer_drop_len(data.size()))
+    if (!connection->recv_buffer_drop())
     {
         assert(false);
         return (false);

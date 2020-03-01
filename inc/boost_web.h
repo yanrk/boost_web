@@ -172,8 +172,8 @@ public:
     virtual bool recv_buffer_data_is_text() = 0;
     virtual const void * recv_buffer_data() = 0;
     virtual std::size_t recv_buffer_size() = 0;
-    virtual bool recv_buffer_drop_len(std::size_t len) = 0;
-    virtual bool send_buffer_fill_len(bool text, const void * data, std::size_t len) = 0;
+    virtual bool recv_buffer_drop() = 0;
+    virtual bool send_buffer_fill(bool text, const void * data, std::size_t len) = 0;
 
 public:
     virtual void close() = 0;
