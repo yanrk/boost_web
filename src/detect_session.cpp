@@ -42,7 +42,7 @@ void DetectSession::run()
     boost::beast::async_detect_ssl(m_stream, m_buffer, boost::beast::bind_front_handler(&DetectSession::on_detect, shared_from_this()));
 }
 
-void DetectSession::on_detect(boost::beast::error_code ec, boost::tribool result)
+void DetectSession::on_detect(boost::beast::error_code ec, bool result)
 {
     if (ec)
     {

@@ -12,7 +12,7 @@ boost_web_home     = $(project_home)/../..
 
 
 # includes of boost headers
-boost_inc_path     = /usr/local/include/boost_1_67_0
+boost_inc_path     = /usr/local/include/boost_1_72_0
 boost_includes     = -I$(boost_inc_path)
 
 # includes of boost_web headers

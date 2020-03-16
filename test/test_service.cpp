@@ -7,12 +7,12 @@
 static const char msg_blk[] = "this is a message\n";
 static const std::size_t msg_len = sizeof(msg_blk) / sizeof(msg_blk[0]) - 1;
 
-TestService::TestService(bool server, bool text, bool ssl, std::size_t send_times, std::size_t connection_count)
+TestService::TestService(bool server, bool text, bool ssl, std::size_t send_times, std::size_t connect_count)
     : m_server(server)
     , m_text(text)
     , m_ssl(ssl)
-    , m_max_msg_cnt(send_times)
-    , m_max_connection_cnt(connection_count)
+    , m_max_message_count(send_times)
+    , m_max_connect_count(connect_count)
     , m_connect_count(0)
     , m_disconnect_count(0)
     , m_send_finish_count(0)
@@ -198,13 +198,13 @@ bool TestService::remove_connection(BoostWeb::WebsocketConnectionSharedPtr conne
 
 bool TestService::send_message(BoostWeb::WebsocketConnectionSharedPtr connection)
 {
-    if (0 == m_max_msg_cnt)
+    if (0 == m_max_message_count)
     {
         return (true);
     }
 
     std::size_t count = reinterpret_cast<std::size_t>(connection->get_user_data());
-    if (count >= m_max_msg_cnt)
+    if (count >= m_max_message_count)
     {
         std::string host_ip;
         unsigned short host_port = 0;
@@ -232,14 +232,14 @@ bool TestService::send_message(BoostWeb::WebsocketConnectionSharedPtr connection
         return (false);
     }
 
-    printf("send %u\n", count);
+    printf("send %zu\n", count);
 
     return (true);
 }
 
 bool TestService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection)
 {
-    assert(0 != m_max_msg_cnt);
+    assert(0 != m_max_message_count);
 
     if (!connection->recv_buffer_has_data())
     {
@@ -270,7 +270,7 @@ bool TestService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
 
     std::size_t count = reinterpret_cast<std::size_t>(connection->get_user_data());
 
-    printf("recv %u\n", count);
+    printf("recv %zu\n", count);
 
     if (!send_message(connection))
     {
@@ -283,7 +283,7 @@ bool TestService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
 bool TestService::check_message(BoostWeb::WebsocketConnectionSharedPtr connection, const char * data, std::size_t len)
 {
     std::size_t count = reinterpret_cast<std::size_t>(connection->get_user_data());
-    if (count >= m_max_msg_cnt)
+    if (count >= m_max_message_count)
     {
         assert(false);
         return (false);
@@ -336,13 +336,13 @@ bool TestService::init()
         {
             return (false);
         }
-        for (std::size_t index = 0; index < m_max_connection_cnt; ++index)
+        for (std::size_t index = 0; index < m_max_connect_count; ++index)
         {
             if (m_ssl)
             {
                 if (!m_web_manager.create_wss_client("127.0.0.1", "12345", "/", 66666, 30))
                 {
-                    printf("create wss-client-%u failed\n", index);
+                    printf("create wss-client-%zu failed\n", index);
                     break;
                 }
             }
@@ -350,7 +350,7 @@ bool TestService::init()
             {
                 if (!m_web_manager.create_ws_client("127.0.0.1", "12345", "/", 66666, 30))
                 {
-                    printf("create ws-client-%u failed\n", index);
+                    printf("create ws-client-%zu failed\n", index);
                     break;
                 }
             }

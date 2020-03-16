@@ -36,7 +36,7 @@ public:
     void run();
 
 private:
-    void on_detect(boost::beast::error_code ec, boost::tribool result);
+    void on_detect(boost::beast::error_code ec, bool result);
 
 private:
     boost::beast::tcp_stream                                                    m_stream;
