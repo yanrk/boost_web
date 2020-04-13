@@ -15,8 +15,12 @@
             <textarea id="debugTextArea" style="width:400px;height:200px;"></textarea>
         </p>
         <p>
-            <input type="text" id="inputText" onkeydown="if(event.keyCode==13)sendMessage();"/>
-            <button onClick="sendMessage();">Send</button>
+            <input type="text" id="inputBinary" onkeydown="if(event.keyCode==13)sendBinary();"/>
+            <button onClick="sendBinary();">SendBinary</button>
+        </p>
+        <p>
+            <input type="text" id="inputText" onkeydown="if(event.keyCode==13)sendText();"/>
+            <button onClick="sendText();">SendText</button>
         </p>
 
         <script type="text/javascript">
@@ -29,14 +33,26 @@
                 debugTextArea.scrollTop = debugTextArea.scrollHeight;
             }
 
-            function sendMessage() {
-                var msg = document.getElementById("inputText").value;
+            function sendBinary() {
+                var number = document.getElementById("inputBinary").value;
+                if ( websocket != null )
+                {
+                    document.getElementById("inputBinary").value = "";
+                    binary = new Uint8Array(number);
+                    websocket.send( binary );
+                    debug("send binary: ");
+                    debug("send data size is " + number);
+                }
+            }
+
+            function sendText() {
+                var text = document.getElementById("inputText").value;
                 if ( websocket != null )
                 {
                     document.getElementById("inputText").value = "";
-                    websocket.send( msg );
-                    debug("send: ");
-                    debug(msg);
+                    websocket.send( text );
+                    debug("send text: ");
+                    debug(text);
                 }
             }
 
@@ -54,8 +70,13 @@
                         debug("DISCONNECTED");
                     };
                     websocket.onmessage = function (evt) {
-                        debug("recv: ");
-                        debug(evt.data);
+                        if (evt.data instanceof Blob) {
+                            debug("recv binary: ");
+                            debug("recv data size is " + evt.data.size)
+                        } else {
+                            debug("recv text: ");
+                            debug(evt.data);
+                        }
                     };
                     websocket.onerror = function (evt) {
                         debug('ERROR: ' + evt.data);
