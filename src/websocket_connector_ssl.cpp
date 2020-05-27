@@ -15,7 +15,7 @@
 
 namespace BoostWeb { // namespace BoostWeb begin
 
-WebsocketsConnector::WebsocketsConnector(boost::asio::io_context & ioc, boost::asio::ssl::context & ctx, WebServiceBase * service, std::size_t identity, std::size_t timeout, const char * host, const char * port, const char * target)
+WebsocketsConnector::WebsocketsConnector(boost::asio::io_context & ioc, boost::asio::ssl::context & ctx, WebServiceBase * service, const void * identity, std::size_t timeout, const char * host, const char * port, const char * target)
     : m_resolver(boost::asio::make_strand(ioc))
     , m_stream(boost::asio::make_strand(ioc), ctx)
     , m_service(service)

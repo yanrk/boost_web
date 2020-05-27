@@ -36,7 +36,7 @@ the files *test/test_service.h* and *echo/echo_service.h* have show you how to u
        virtual void on_error(const char * protocol, const char * what, int error, const char * message) override;
    
    public: /* websocket(s) */
-       virtual bool on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, std::size_t identity) override;
+       virtual bool on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, const void * identity) override;
        virtual bool on_accept(BoostWeb::WebsocketConnectionSharedPtr connection, unsigned short listener_port) override;
        virtual bool on_recv(BoostWeb::WebsocketConnectionSharedPtr connection) override;
        virtual bool on_send(BoostWeb::WebsocketConnectionSharedPtr connection) override;
@@ -106,14 +106,14 @@ the files *test/test_service.h* and *echo/echo_service.h* have show you how to u
      
          unsigned short ws_port_1 = 9001;
          std::size_t ws_identity_1 = 11111; /* when you need to identify the connection */
-         if (!m_ws_manager.create_ws_client(ws_host, ws_port_1, ws_root, ws_identity_1))
+         if (!m_ws_manager.create_ws_client(ws_host, ws_port_1, ws_root, reinterpret_cast<const void *>(ws_identity_1)))
          {
              return (false);
          }
      
          unsigned short ws_port_2 = 9002;
          std::size_t ws_identity_2 = 22222; /* when you need to identify the connection */
-         if (!m_ws_manager.create_ws_client(ws_host, ws_port_2, ws_root, ws_identity_2))
+         if (!m_ws_manager.create_ws_client(ws_host, ws_port_2, ws_root, reinterpret_cast<const void *>(ws_identity_2)))
          {
              return (false);
          }
@@ -123,14 +123,14 @@ the files *test/test_service.h* and *echo/echo_service.h* have show you how to u
      
          unsigned short wss_port_1 = 9011;
          std::size_t wss_identity_1 = 33333; /* when you need to identify the connection */
-         if (!m_wss_manager.create_wss_client(wss_host, wss_port_1, wss_root, wss_identity_1))
+         if (!m_wss_manager.create_wss_client(wss_host, wss_port_1, wss_root, reinterpret_cast<const void *>(wss_identity_1)))
          {
              return (false);
          }
      
          unsigned short wss_port_2 = 9012;
          std::size_t wss_identity_2 = 44444; /* when you need to identify the connection */
-         if (!m_wss_manager.create_wss_client(wss_host, wss_port_2, wss_root, wss_identity_2))
+         if (!m_wss_manager.create_wss_client(wss_host, wss_port_2, wss_root, reinterpret_cast<const void *>(wss_identity_2)))
          {
              return (false);
          }
@@ -232,26 +232,26 @@ the files *test/test_service.h* and *echo/echo_service.h* have show you how to u
 9. when **client** active-connect complete , **on_connect**(*connection*, *identity*) will callback, *identity* identify which connect-operation, if *connection* is *nullptr* means connect failed, **note** that the **return value is very important**, if return false means that the current connection is abandoned, which is equivalent to calling *connection->close()* implicitly
 
    ```c++
-   bool TestService::on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, std::size_t identity)
+   bool TestService::on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, const void * identity)
    {
        if (!connection)
        {
            /* maybe we want retry */
-           if (11111 == identity) /* the first ws connect operate failed */
+           if (reinterpret_cast<const void *>(11111) == identity) /* the first ws connect operate failed */
            {
-               m_web_manager.create_ws_client("172.16.4.33", 9001, "/", 11111); 
+               m_web_manager.create_ws_client("172.16.4.33", 9001, "/", identity); 
            }
-           else if (22222 == identity) /* the second ws connect operate failed */
+           else if (reinterpret_cast<const void *>(22222) == identity) /* the second ws connect operate failed */
            {
-               m_web_manager.create_ws_client("172.16.4.33", 9002, "/", 22222); 
+               m_web_manager.create_ws_client("172.16.4.33", 9002, "/", identity); 
            }
-           else if (33333 == identity) /* the first wss connect operate failed */
+           else if (reinterpret_cast<const void *>(33333) == identity) /* the first wss connect operate failed */
            {
-               m_web_manager.create_wss_client("192.168.1.113", 9011, "/", 33333); 
+               m_web_manager.create_wss_client("192.168.1.113", 9011, "/", identity); 
            }
-           else if (44444 == identity) /* the second wss connect operate failed */
+           else if (reinterpret_cast<const void *>(44444) == identity) /* the second wss connect operate failed */
            {
-               m_web_manager.create_wss_client("192.168.1.113", 9012, "/", 44444); 
+               m_web_manager.create_wss_client("192.168.1.113", 9012, "/", identity); 
            }
            else
            {
@@ -265,19 +265,19 @@ the files *test/test_service.h* and *echo/echo_service.h* have show you how to u
            connection->set_user_data(reinterpret_cast<void *>(identity));
             
            /* also we can store connection with a member variable */
-           if (11111 == identity) /* the first ws connect operate success */
+           if (reinterpret_cast<const void *>(11111) == identity) /* the first ws connect operate success */
            {
                m_ws_connection_1 = connection;
            }
-           else if (22222 == identity) /* the second ws connect operate success */
+           else if (reinterpret_cast<const void *>(22222) == identity) /* the second ws connect operate success */
            {
                m_ws_connection_2 = connection;
            }
-           else if (33333 == identity) /* the first wss connect operate success */
+           else if (reinterpret_cast<const void *>(33333) == identity) /* the first wss connect operate success */
            {
                m_wss_connection_1 = connection;
            }
-           else if (44444 == identity) /* the second wss connect operate success */
+           else if (reinterpret_cast<const void *>(44444) == identity) /* the second wss connect operate success */
            {
                m_wss_connection_2 = connection;
            }
@@ -322,27 +322,27 @@ the files *test/test_service.h* and *echo/echo_service.h* have show you how to u
       {
           assert(!!connection);
           /* we have stored identity as a user data before, now can load it */
-          std::size_t identity = reinterpret_cast(connection->get_user_data());
+          const void * identity = connection->get_user_data();
           /* maybe we want to reconnect */
-          if (11111 == identity) /* it is the first ws connection close */
+          if (reinterpret_cast<const void *>(11111) == identity) /* it is the first ws connection close */
           {
               m_ws_connection_1.reset();
-              m_web_manager.create_ws_client("172.16.4.33", 9001, "/", 11111); 
+              m_web_manager.create_ws_client("172.16.4.33", 9001, "/", identity);
           }
-          else if (22222 == identity) /* it is the second ws connection close */
+          else if (reinterpret_cast<const void *>(22222) == identity) /* it is the second ws connection close */
           {
               m_ws_connection_2.reset();
-              m_web_manager.create_ws_client("172.16.4.33", 9002, "/", 22222); 
+              m_web_manager.create_ws_client("172.16.4.33", 9002, "/", identity);
           }
-          else if (33333 == identity) /* it is the first wss connection close */
+          else if (reinterpret_cast<const void *>(33333) == identity) /* it is the first wss connection close */
           {
               m_wss_connection_1.reset();
-              m_web_manager.create_wss_client("192.168.1.113", 9011, "/", 33333); 
+              m_web_manager.create_wss_client("192.168.1.113", 9011, "/", identity);
           }
-          else if (44444 == identity) /* it is the second wss connection close */
+          else if (reinterpret_cast<const void *>(44444) == identity) /* it is the second wss connection close */
           {
               m_wss_connection_2.reset();
-              m_web_manager.create_wss_client("192.168.1.113", 9012, "/", 44444); 
+              m_web_manager.create_wss_client("192.168.1.113", 9012, "/", identity);
           }
           else
           {
@@ -361,22 +361,22 @@ the files *test/test_service.h* and *echo/echo_service.h* have show you how to u
           if (connection == m_ws_connection_1) /* it is the first ws connection close */
           {
               m_ws_connection_1.reset();
-              m_web_manager.create_ws_client("172.16.4.33", 9001, "/", 11111); 
+              m_web_manager.create_ws_client("172.16.4.33", 9001, "/", reinterpret_cast<const void *>(11111)); 
           }
           else if (connection == m_ws_connection_2) /* it is the second ws connection close */
           {
               m_ws_connection_2.reset();
-              m_web_manager.create_ws_client("172.16.4.33", 9002, "/", 22222); 
+              m_web_manager.create_ws_client("172.16.4.33", 9002, "/", reinterpret_cast<const void *>(22222));
           }
           else if (connection == m_wss_connection_1) /* it is the first wss connection close */
           {
               m_wss_connection_1.reset();
-              m_web_manager.create_wss_client("192.168.1.113", 9011, "/", 33333); 
+              m_web_manager.create_wss_client("192.168.1.113", 9011, "/", reinterpret_cast<const void *>(33333));
           }
           else if (connection == m_wss_connection_2) /* it is the second wss connection close */
           {
               m_wss_connection_2.reset();
-              m_web_manager.create_wss_client("192.168.1.113", 9012, "/", 44444); 
+              m_web_manager.create_wss_client("192.168.1.113", 9012, "/", reinterpret_cast<const void *>(44444));
           }
           else
           {

@@ -39,7 +39,7 @@ void make_websocket_session(boost::beast::tcp_stream stream, Address address, We
     std::make_shared<WebsocketSession>(std::move(stream), std::move(address), service)->run(std::move(req));
 }
 
-void make_websocket_session(boost::beast::websocket::stream<boost::beast::tcp_stream> stream, Address address, WebServiceBase * service, std::size_t identity);
+void make_websocket_session(boost::beast::websocket::stream<boost::beast::tcp_stream> stream, Address address, WebServiceBase * service, const void * identity);
 
 } // namespace BoostWeb end
 

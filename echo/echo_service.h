@@ -22,7 +22,7 @@ public: /* http(s) */
     virtual void on_error(const char * protocol, const char * what, int error, const char * message) override;
 
 public: /* websocket(s) */
-    virtual bool on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, std::size_t identity) override;
+    virtual bool on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, const void * identity) override;
     virtual bool on_accept(BoostWeb::WebsocketConnectionSharedPtr connection, unsigned short listener_port) override;
     virtual bool on_recv(BoostWeb::WebsocketConnectionSharedPtr connection) override;
     virtual bool on_send(BoostWeb::WebsocketConnectionSharedPtr connection) override;

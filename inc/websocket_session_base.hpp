@@ -65,7 +65,7 @@ public:
 
 public:
     template <class Body, class Allocator> void run(boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>> req);
-    void run(std::size_t identity);
+    void run(const void * identity);
     void eof();
 
 public:
@@ -93,6 +93,7 @@ private:
 
 private:
     void                                                                      * m_user_data;
+    bool                                                                        m_has_close;
 };
 
 template <class Derived>
@@ -118,6 +119,7 @@ WebsocketSessionBase<Derived>::WebsocketSessionBase(Address address, WebServiceB
     , m_recv_queue()
     , m_send_queue()
     , m_user_data(nullptr)
+    , m_has_close(false)
 {
     BOOST_ASSERT(nullptr != service);
 }
@@ -227,7 +229,7 @@ void WebsocketSessionBase<Derived>::run(boost::beast::http::request<Body, boost:
 }
 
 template <class Derived>
-void WebsocketSessionBase<Derived>::run(std::size_t identity)
+void WebsocketSessionBase<Derived>::run(const void * identity)
 {
     if (!m_service->on_connect(derived().shared_from_this(), identity))
     {
@@ -359,7 +361,11 @@ void WebsocketSessionBase<Derived>::on_close(boost::beast::error_code ec)
 {
     boost::ignore_unused(ec);
 
-    m_service->on_close(derived().shared_from_this());
+    if (!m_has_close)
+    {
+        m_has_close = true;
+        m_service->on_close(derived().shared_from_this());
+    }
 }
 
 template <class Derived>

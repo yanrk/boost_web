@@ -161,7 +161,7 @@ void WebManagerImpl::exit()
     m_web_service = nullptr;
 }
 
-bool WebManagerImpl::create_ws_client(const char * host, const char * port, const char * target, std::size_t identity, std::size_t timeout)
+bool WebManagerImpl::create_ws_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout)
 {
     if (nullptr == host || nullptr == port || nullptr == target || '/' != *target)
     {
@@ -171,7 +171,7 @@ bool WebManagerImpl::create_ws_client(const char * host, const char * port, cons
     return (true);
 }
 
-bool WebManagerImpl::create_wss_client(const char * host, const char * port, const char * target, std::size_t identity, std::size_t timeout)
+bool WebManagerImpl::create_wss_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout)
 {
     if (nullptr == host || nullptr == port || nullptr == target || '/' != *target)
     {

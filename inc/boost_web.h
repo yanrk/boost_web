@@ -205,7 +205,7 @@ public: /* http(s) */
     virtual void on_error(const char * protocol, const char * what, int error, const char * message) = 0;
 
 public: /* websocket(s) */
-    virtual bool on_connect(WebsocketConnectionSharedPtr connection, std::size_t identity) = 0;
+    virtual bool on_connect(WebsocketConnectionSharedPtr connection, const void * identity) = 0;
     virtual bool on_accept(WebsocketConnectionSharedPtr connection, unsigned short listener_port) = 0;
     virtual bool on_recv(WebsocketConnectionSharedPtr connection) = 0;
     virtual bool on_send(WebsocketConnectionSharedPtr connection) = 0;
@@ -256,10 +256,10 @@ public:
     void exit();
 
 public:
-    bool create_ws_client(const char * host, const char * port, const char * target, std::size_t identity, std::size_t timeout = 30);
-    bool create_ws_client(const char * host, unsigned short port, const char * target, std::size_t identity, std::size_t timeout = 30);
-    bool create_wss_client(const char * host, const char * port, const char * target, std::size_t identity, std::size_t timeout = 30);
-    bool create_wss_client(const char * host, unsigned short port, const char * target, std::size_t identity, std::size_t timeout = 30);
+    bool create_ws_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout = 30);
+    bool create_ws_client(const char * host, unsigned short port, const char * target, const void * identity, std::size_t timeout = 30);
+    bool create_wss_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout = 30);
+    bool create_wss_client(const char * host, unsigned short port, const char * target, const void * identity, std::size_t timeout = 30);
 
 private:
     WebManagerImpl                                * m_manager_impl;

@@ -76,7 +76,7 @@ void TestService::on_error(const char * protocol, const char * what, int error, 
     show_error(protocol, what, error, message);
 }
 
-bool TestService::on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, std::size_t identity)
+bool TestService::on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, const void * identity)
 {
     return (!!connection && insert_connection(connection) && send_message(connection));
 }
@@ -340,7 +340,7 @@ bool TestService::init()
         {
             if (m_ssl)
             {
-                if (!m_web_manager.create_wss_client("127.0.0.1", "12345", "/", 66666, 30))
+                if (!m_web_manager.create_wss_client("127.0.0.1", "12345", "/", reinterpret_cast<const void *>(66666), 30))
                 {
                     printf("create wss-client-%zu failed\n", index);
                     break;
@@ -348,7 +348,7 @@ bool TestService::init()
             }
             else
             {
-                if (!m_web_manager.create_ws_client("127.0.0.1", "12345", "/", 66666, 30))
+                if (!m_web_manager.create_ws_client("127.0.0.1", "12345", "/", reinterpret_cast<const void *>(66666), 30))
                 {
                     printf("create ws-client-%zu failed\n", index);
                     break;

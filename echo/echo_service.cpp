@@ -38,7 +38,7 @@ void EchoService::on_error(const char * protocol, const char * what, int error, 
     show_error(protocol, what, error, message);
 }
 
-bool EchoService::on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, std::size_t identity)
+bool EchoService::on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, const void * identity)
 {
     assert(false);
     return (false);

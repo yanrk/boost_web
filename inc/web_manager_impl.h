@@ -36,8 +36,8 @@ public:
     void exit();
 
 public:
-    bool create_ws_client(const char * host, const char * port, const char * target, std::size_t identity, std::size_t timeout);
-    bool create_wss_client(const char * host, const char * port, const char * target, std::size_t identity, std::size_t timeout);
+    bool create_ws_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout);
+    bool create_wss_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout);
 
 private:
     boost::ptr_list<boost::asio::io_context>                                    m_io_contexts;
