@@ -74,6 +74,7 @@ void WebsocketsConnector::on_ssl_handshake(boost::beast::error_code ec)
     }
 
     boost::beast::get_lowest_layer(m_stream).expires_never();
+    m_stream.read_message_max(0);
     m_stream.set_option(boost::beast::websocket::stream_base::timeout::suggested(boost::beast::role_type::client));
     m_stream.set_option(boost::beast::websocket::stream_base::decorator([](boost::beast::websocket::request_type & req){req.set(boost::beast::http::field::user_agent, "boost web client on boost beast");}));
     m_stream.async_handshake(m_host, m_target, boost::beast::bind_front_handler(&WebsocketsConnector::on_handshake, shared_from_this()));

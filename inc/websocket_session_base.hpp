@@ -250,6 +250,7 @@ template <class Derived>
 template <class Body, class Allocator>
 void WebsocketSessionBase<Derived>::accept(boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>> req)
 {
+    derived().websocket().read_message_max(0);
     derived().websocket().set_option(boost::beast::websocket::stream_base::timeout::suggested(boost::beast::role_type::server));
     derived().websocket().set_option(boost::beast::websocket::stream_base::decorator([](boost::beast::websocket::response_type & res){res.set(boost::beast::http::field::server, "boost web server on boost beast");}));
     derived().websocket().async_accept(req, boost::beast::bind_front_handler(&WebsocketSessionBase::on_accept, derived().shared_from_this()));
