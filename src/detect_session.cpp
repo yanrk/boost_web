@@ -9,6 +9,7 @@
  ********************************************************/
 
 #include <type_traits>
+#include <boost/asio/dispatch.hpp>
 #include "detect_session.h"
 #include "http_session_plain.h"
 #include "http_session_ssl.h"
@@ -36,6 +37,11 @@ DetectSession::DetectSession(boost::asio::ip::tcp::socket && socket, boost::asio
 }
 
 void DetectSession::run()
+{
+    boost::asio::dispatch(m_stream.get_executor(), boost::beast::bind_front_handler(&DetectSession::on_run, shared_from_this()));
+}
+
+void DetectSession::on_run()
 {
     m_stream.expires_after(m_timeout);
 

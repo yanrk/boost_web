@@ -36,6 +36,7 @@ public:
     void run();
 
 private:
+    void on_run();
     void on_detect(boost::beast::error_code ec, bool result);
 
 private:
