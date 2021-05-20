@@ -7,7 +7,7 @@ platform = linux/x64
 project_home       = .
 bin_dir            = $(project_home)/bin/$(platform)
 object_dir         = $(project_home)/.objs
-boost_web_home     = $(project_home)/../..
+boost_web_home     = $(project_home)/..
 
 
 

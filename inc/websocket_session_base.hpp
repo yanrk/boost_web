@@ -12,6 +12,7 @@
 #define BOOST_WEB_WEBSOCKET_SESSION_BASE_HPP
 
 
+#include <atomic>
 #include <deque>
 #include <string>
 #include <memory>
@@ -53,11 +54,13 @@ public:
     virtual void get_peer_address(std::string & ip, unsigned short & port) const override;
 
 public:
+    virtual std::size_t recv_queue_size() override;
     virtual bool recv_buffer_has_data() override;
     virtual bool recv_buffer_data_is_text() override;
     virtual const void * recv_buffer_data() override;
     virtual std::size_t recv_buffer_size() override;
     virtual bool recv_buffer_drop() override;
+    virtual std::size_t send_queue_size() override;
     virtual bool send_buffer_fill(bool text, const void * data, std::size_t len) override;
 
 public:
@@ -92,6 +95,10 @@ private:
     std::deque<BufferNode>                                                      m_send_queue;
 
 private:
+    std::atomic<std::size_t>                                                    m_recv_queue_size;
+    std::atomic<std::size_t>                                                    m_send_queue_size;
+
+private:
     void                                                                      * m_user_data;
     bool                                                                        m_has_close;
 };
@@ -118,6 +125,8 @@ WebsocketSessionBase<Derived>::WebsocketSessionBase(Address address, WebServiceB
     , m_service(service)
     , m_recv_queue()
     , m_send_queue()
+    , m_recv_queue_size(0)
+    , m_send_queue_size(0)
     , m_user_data(nullptr)
     , m_has_close(false)
 {
@@ -154,6 +163,12 @@ void WebsocketSessionBase<Derived>::get_peer_address(std::string & ip, unsigned 
 {
     ip = m_address.m_peer_ip;
     port = m_address.m_peer_port;
+}
+
+template <class Derived>
+std::size_t WebsocketSessionBase<Derived>::recv_queue_size()
+{
+    return (m_recv_queue_size);
 }
 
 template <class Derived>
@@ -200,7 +215,14 @@ bool WebsocketSessionBase<Derived>::recv_buffer_drop()
         return (false);
     }
     m_recv_queue.pop_front();
+    --m_recv_queue_size;
     return (true);
+}
+
+template <class Derived>
+std::size_t WebsocketSessionBase<Derived>::send_queue_size()
+{
+    return (m_send_queue_size);
 }
 
 template <class Derived>
@@ -312,6 +334,7 @@ void WebsocketSessionBase<Derived>::on_recv(boost::beast::error_code ec, std::si
 
     m_recv_queue.back().m_text = derived().websocket().got_text();
 //  m_recv_queue.back().m_buffer.commit(bytes_transferred);
+    ++m_recv_queue_size;
 
     if (!m_service->on_recv(derived().shared_from_this()))
     {
@@ -344,6 +367,7 @@ void WebsocketSessionBase<Derived>::on_send(boost::beast::error_code ec, std::si
     }
 
     m_send_queue.pop_front();
+    --m_send_queue_size;
 
     if (!m_service->on_send(derived().shared_from_this()))
     {
@@ -373,6 +397,7 @@ template <class Derived>
 void WebsocketSessionBase<Derived>::on_post(std::shared_ptr<BufferNode> buffer_node)
 {
     m_send_queue.emplace_back(std::move(*buffer_node));
+    ++m_send_queue_size;
 
     if (1 == m_send_queue.size())
     {
