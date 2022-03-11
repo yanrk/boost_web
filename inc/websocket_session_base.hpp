@@ -326,7 +326,7 @@ void WebsocketSessionBase<Derived>::on_recv(boost::beast::error_code ec, std::si
         {
             m_service->on_error(derived().shared_from_this(), derived().protocol(), "recv", ec.value(), ec.message().c_str());
         }
-        close();
+        on_close(ec);
         return;
     }
 
@@ -354,7 +354,7 @@ void WebsocketSessionBase<Derived>::on_send(boost::beast::error_code ec, std::si
         {
             m_service->on_error(derived().shared_from_this(), derived().protocol(), "send", ec.value(), ec.message().c_str());
         }
-        close();
+        on_close(ec);
         return;
     }
 
