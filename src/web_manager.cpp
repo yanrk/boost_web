@@ -27,7 +27,7 @@ WebManager::~WebManager()
     exit();
 }
 
-bool WebManager::init(WebServiceBase * web_service, const ServiceNode * service_array, std::size_t service_count, bool pass_file_not_buffer, const char * crt_file_or_buffer, const char * key_file_or_buffer, std::size_t thread_count)
+bool WebManager::init(WebServiceBase * web_service, const ServiceNode * service_array, std::size_t service_count, bool service_any_valid, bool pass_file_not_buffer, const char * crt_file_or_buffer, const char * key_file_or_buffer, std::size_t thread_count)
 {
     if (nullptr == web_service)
     {
@@ -45,7 +45,7 @@ bool WebManager::init(WebServiceBase * web_service, const ServiceNode * service_
         return (false);
     }
 
-    if (m_manager_impl->init(web_service, service_array, service_count, pass_file_not_buffer, crt_file_or_buffer, key_file_or_buffer, thread_count))
+    if (m_manager_impl->init(web_service, service_array, service_count, service_any_valid, pass_file_not_buffer, crt_file_or_buffer, key_file_or_buffer, thread_count))
     {
         return (true);
     }

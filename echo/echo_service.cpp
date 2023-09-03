@@ -161,7 +161,7 @@ bool EchoService::init()
     service_node.timeout = 15;
     service_node.body_limit = 0;
     service_node.protocol = BoostWeb::support_protocol_t::protocol_wsss;
-    if (!m_web_manager.init(this, &service_node, 1, true, nullptr, nullptr, 1))
+    if (!m_web_manager.init(this, &service_node, 1, false, true, nullptr, nullptr, 1))
     {
         return (false);
     }

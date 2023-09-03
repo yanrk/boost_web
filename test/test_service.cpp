@@ -325,14 +325,14 @@ bool TestService::init()
         server_node.timeout = 15;
         server_node.body_limit = 0;
         server_node.protocol = BoostWeb::support_protocol_t::protocol_all;
-        if (!m_web_manager.init(this, &server_node, 1, true, crt_file, key_file, 1))
+        if (!m_web_manager.init(this, &server_node, 1, false, true, crt_file, key_file, 1))
         {
             return (false);
         }
     }
     else
     {
-        if (!m_web_manager.init(this, nullptr, 0, true, nullptr, nullptr, 1))
+        if (!m_web_manager.init(this, nullptr, 0, false, true, nullptr, nullptr, 1))
         {
             return (false);
         }

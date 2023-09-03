@@ -38,7 +38,7 @@ WebManagerImpl::~WebManagerImpl()
 
 }
 
-bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * service_array, std::size_t service_count, bool pass_file_not_buffer, const char * crt_file_or_buffer, const char * key_file_or_buffer, std::size_t thread_count)
+bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * service_array, std::size_t service_count, bool service_any_valid, bool pass_file_not_buffer, const char * crt_file_or_buffer, const char * key_file_or_buffer, std::size_t thread_count)
 {
     if (nullptr == web_service)
     {
@@ -119,19 +119,50 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
             unsupported_protocols = 0x0;
         }
 
-        for (std::size_t index = 0; index < service_count; ++index)
+        if (service_any_valid)
         {
-            const ServiceNode & service_node = service_array[index];
-            BOOST_ASSERT(nullptr != service_node.host);
-            BOOST_ASSERT(service_node.port > 0);
-            BOOST_ASSERT(nullptr != service_node.root);
-            unsigned char protocol = (service_node.protocol) & (~unsupported_protocols);
-            if (0 == protocol)
+            std::size_t index = 0;
+            while (index < service_count)
             {
-                m_web_service->on_error("init", "protocol", 1, "no support protocol");
+                const ServiceNode & service_node = service_array[index];
+                BOOST_ASSERT(nullptr != service_node.host);
+                BOOST_ASSERT(service_node.port > 0);
+                BOOST_ASSERT(nullptr != service_node.root);
+                unsigned char protocol = (service_node.protocol) & (~unsupported_protocols);
+                if (0 == protocol)
+                {
+                    m_web_service->on_error("init", "protocol", 1, "no support protocol");
+                }
+                else if (std::make_shared<Listener>(m_io_contexts.back(), m_ssl_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(service_node.host), service_node.port), std::make_shared<std::string>(service_node.root), service_node.timeout, service_node.body_limit, protocol, m_web_service)->run())
+                {
+                    break;
+                }
+                ++index;
+            }
+            if (index == service_count)
+            {
                 return (false);
             }
-            std::make_shared<Listener>(m_io_contexts.back(), m_ssl_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(service_node.host), service_node.port), std::make_shared<std::string>(service_node.root), service_node.timeout, service_node.body_limit, protocol, m_web_service)->run();
+        }
+        else
+        {
+            for (std::size_t index = 0; index < service_count; ++index)
+            {
+                const ServiceNode & service_node = service_array[index];
+                BOOST_ASSERT(nullptr != service_node.host);
+                BOOST_ASSERT(service_node.port > 0);
+                BOOST_ASSERT(nullptr != service_node.root);
+                unsigned char protocol = (service_node.protocol) & (~unsupported_protocols);
+                if (0 == protocol)
+                {
+                    m_web_service->on_error("init", "protocol", 1, "no support protocol");
+                    return (false);
+                }
+                else if (!std::make_shared<Listener>(m_io_contexts.back(), m_ssl_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(service_node.host), service_node.port), std::make_shared<std::string>(service_node.root), service_node.timeout, service_node.body_limit, protocol, m_web_service)->run())
+                {
+                    return (false);
+                }
+            }
         }
     }
 

@@ -24,6 +24,7 @@ Listener::Listener(boost::asio::io_context & ioc, boost::asio::ssl::context & ct
     , m_body_limit(body_limit)
     , m_protocol(protocol)
     , m_service(service)
+    , m_good(false)
 {
     BOOST_ASSERT(nullptr != service);
 
@@ -56,11 +57,17 @@ Listener::Listener(boost::asio::io_context & ioc, boost::asio::ssl::context & ct
         m_service->on_error("listener", "listen", ec.value(), ec.message().c_str());
         return;
     }
+
+    m_good = true;
 }
 
-void Listener::run()
+bool Listener::run()
 {
-    accept();
+    if (m_good)
+    {
+        accept();
+    }
+    return (m_good);
 }
 
 void Listener::accept()

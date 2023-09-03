@@ -254,7 +254,7 @@ public:
     WebManager & operator = (const WebManager &) = delete;
 
 public:
-    bool init(WebServiceBase * web_service, const ServiceNode * service_array, std::size_t service_count = 1, bool pass_file_not_buffer = true, const char * crt_file_or_buffer = nullptr, const char * key_file_or_buffer = nullptr, std::size_t thread_count = 5);
+    bool init(WebServiceBase * web_service, const ServiceNode * service_array, std::size_t service_count = 1, bool service_any_valid = false, bool pass_file_not_buffer = true, const char * crt_file_or_buffer = nullptr, const char * key_file_or_buffer = nullptr, std::size_t thread_count = 5);
     void exit();
 
 public:

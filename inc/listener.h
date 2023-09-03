@@ -26,7 +26,7 @@ public:
     Listener(boost::asio::io_context & ioc, boost::asio::ssl::context & ctx, boost::asio::ip::tcp::endpoint endpoint, const std::shared_ptr<const std::string> & doc_root, std::size_t timeout, uint64_t body_limit, unsigned char protocol, WebServiceBase * service);
 
 public:
-    void run();
+    bool run();
     void accept();
 
 private:
@@ -41,6 +41,7 @@ private:
     uint64_t                                                                    m_body_limit;
     unsigned char                                                               m_protocol;
     WebServiceBase                                                            * m_service;
+    bool                                                                        m_good;
 };
 
 } // namespace BoostWeb end

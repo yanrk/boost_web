@@ -84,7 +84,7 @@ the files *test/test_service.h* and *echo/echo_service.h* have show you how to u
          service_node.timeout = 15; /* seconds */
          service_node.body_limit = 0;
          service_node.protocol = BoostWeb::support_protocol_t::protocol_all;
-         return (m_web_manager.init(this, &service_node, 1, true, crt_file, key_file, 1));
+         return (m_web_manager.init(this, &service_node, 1, false, true, crt_file, key_file, 1));
      }
      ```
      

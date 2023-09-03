@@ -32,7 +32,7 @@ public:
     WebManagerImpl & operator = (const WebManagerImpl &) = delete;
 
 public:
-    bool init(WebServiceBase * web_service, const ServiceNode * service_array, std::size_t service_count, bool pass_file_not_buffer, const char * crt_file_or_buffer, const char * key_file_or_buffer, std::size_t thread_count);
+    bool init(WebServiceBase * web_service, const ServiceNode * service_array, std::size_t service_count, bool service_any_valid, bool pass_file_not_buffer, const char * crt_file_or_buffer, const char * key_file_or_buffer, std::size_t thread_count);
     void exit();
 
 public:
