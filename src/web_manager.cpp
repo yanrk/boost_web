@@ -66,6 +66,14 @@ void WebManager::exit()
     }
 }
 
+void WebManager::get_ports(std::vector<uint16_t> & ports)
+{
+    if (nullptr != m_manager_impl)
+    {
+        m_manager_impl->get_ports(ports);
+    }
+}
+
 bool WebManager::create_ws_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout)
 {
     return (nullptr != m_manager_impl && m_manager_impl->create_ws_client(host, port, target, identity, timeout));

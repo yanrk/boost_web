@@ -29,6 +29,7 @@ WebManagerImpl::WebManagerImpl()
     , m_ssl_context(boost::asio::ssl::context::sslv23)
     , m_thread_list()
     , m_web_service(nullptr)
+    , m_web_ports()
 {
 
 }
@@ -58,6 +59,8 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
     m_signal_sets.back().async_wait([this](const boost::beast::error_code &, int) { this->m_io_contexts.back().stop(); });
 
     m_alive_works.push_back(boost::factory<boost::asio::io_context::work *>()(m_io_contexts.back()));
+
+    m_web_ports.clear();
 
     if (nullptr == service_array || 0 == service_count)
     {
@@ -135,6 +138,7 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
                 }
                 else if (std::make_shared<Listener>(m_io_contexts.back(), m_ssl_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(service_node.host), service_node.port), std::make_shared<std::string>(service_node.root), service_node.timeout, service_node.body_limit, protocol, m_web_service)->run())
                 {
+                    m_web_ports.push_back(service_node.port);
                     break;
                 }
                 ++index;
@@ -146,6 +150,7 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
         }
         else
         {
+            std::vector<uint16_t> service_node_ports;
             for (std::size_t index = 0; index < service_count; ++index)
             {
                 const ServiceNode & service_node = service_array[index];
@@ -162,7 +167,9 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
                 {
                     return (false);
                 }
+                service_node_ports.push_back(service_node.port);
             }
+            m_web_ports.swap(service_node_ports);
         }
     }
 
@@ -190,6 +197,12 @@ void WebManagerImpl::exit()
         m_io_contexts.clear();
     }
     m_web_service = nullptr;
+    m_web_ports.clear();
+}
+
+void WebManagerImpl::get_ports(std::vector<uint16_t> & ports)
+{
+    ports = m_web_ports;
 }
 
 bool WebManagerImpl::create_ws_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout)

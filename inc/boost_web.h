@@ -13,6 +13,7 @@
 
 
 #include <cstddef>
+#include <vector>
 #include <string>
 #include <memory>
 
@@ -256,6 +257,9 @@ public:
 public:
     bool init(WebServiceBase * web_service, const ServiceNode * service_array, std::size_t service_count = 1, bool service_any_valid = false, bool pass_file_not_buffer = true, const char * crt_file_or_buffer = nullptr, const char * key_file_or_buffer = nullptr, std::size_t thread_count = 5);
     void exit();
+
+public:
+    void get_ports(std::vector<uint16_t> & ports);
 
 public:
     bool create_ws_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout = 30);

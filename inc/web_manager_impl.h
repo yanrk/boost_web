@@ -12,6 +12,7 @@
 #define BOOST_WEB_WEB_MANAGER_IMPLEMENT_H
 
 
+#include <vector>
 #include <thread>
 #include <boost/asio/ssl.hpp>
 #include <boost/asio/io_context.hpp>
@@ -36,6 +37,9 @@ public:
     void exit();
 
 public:
+    void get_ports(std::vector<uint16_t> & ports);
+
+public:
     bool create_ws_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout);
     bool create_wss_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout);
 
@@ -46,6 +50,7 @@ private:
     boost::asio::ssl::context                                                   m_ssl_context;
     boost::ptr_list<std::thread>                                                m_thread_list;
     WebServiceBase                                                            * m_web_service;
+    std::vector<uint16_t>                                                       m_web_ports;
 };
 
 } // namespace BoostWeb end
