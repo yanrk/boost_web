@@ -17,7 +17,7 @@
 #include <string>
 #include <memory>
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(_WIN32) || defined(_WIN64)
     #define BOOST_WEB_CDECL             __cdecl
     #define BOOST_WEB_STDCALL           __stdcall
     #ifdef EXPORT_BOOST_WEB_DLL
@@ -33,7 +33,7 @@
     #define BOOST_WEB_CDECL
     #define BOOST_WEB_STDCALL
     #define BOOST_WEB_API
-#endif // _MSC_VER
+#endif // defined(_MSC_VER) || defined(_WIN32) || defined(_WIN64)
 
 namespace BoostWeb { // namespace BoostWeb begin
 
@@ -259,7 +259,7 @@ public:
     void exit();
 
 public:
-    void get_ports(std::vector<uint16_t> & ports);
+    void get_ports(std::vector<unsigned short> & ports);
 
 public:
     bool create_ws_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout = 30);

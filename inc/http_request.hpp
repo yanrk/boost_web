@@ -54,13 +54,13 @@ void HttpRequest<Body, Fields>::set_method(http_method_t::value_t http_method)
 template <class Body, class Fields>
 http_method_t::value_t HttpRequest<Body, Fields>::get_method() const
 {
-    return (static_cast<http_method_t::value_t>(m_message.method()));
+    return static_cast<http_method_t::value_t>(m_message.method());
 }
 
 template <class Body, class Fields>
 std::string HttpRequest<Body, Fields>::get_method_string() const
 {
-    return (std::string(m_message.method_string()));
+    return std::string(m_message.method_string());
 }
 
 template <class Body, class Fields>
@@ -72,7 +72,7 @@ void HttpRequest<Body, Fields>::set_target(const std::string & http_target)
 template <class Body, class Fields>
 std::string HttpRequest<Body, Fields>::get_target() const
 {
-    return (std::string(m_message.target()));
+    return std::string(m_message.target());
 }
 
 } // namespace BoostWeb end

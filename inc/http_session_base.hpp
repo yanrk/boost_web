@@ -14,16 +14,17 @@
 
 #include <string>
 #include <vector>
+#include <queue>
 #include <chrono>
 #include <functional>
-#include <boost/asio/bind_executor.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/asio/steady_timer.hpp>
 #include <boost/beast/core.hpp>
-#include <boost/beast/ssl.hpp>
 #include <boost/beast/websocket.hpp>
+#include <boost/beast/websocket/ssl.hpp>
 #include <boost/make_unique.hpp>
 #include <boost/optional/optional.hpp>
+#include <boost/core/ignore_unused.hpp>
 #include "websocket_session_base.hpp"
 #include "websocket_session_plain.h"
 #include "websocket_session_ssl.h"
@@ -53,6 +54,9 @@ protected:
 private:
     Derived & derived();
 
+private:
+    void send();
+
 protected:
     Address                                                                     m_address;
     std::chrono::seconds                                                        m_timeout;
@@ -62,96 +66,13 @@ protected:
     boost::beast::flat_buffer                                                   m_recv_buffer;
 
 private:
-    class WorkQueue
-    {
-    public:
-        explicit WorkQueue(HttpSessionBase & session);
+    enum { queue_limit = 8 };
 
-    public:
-        bool is_full() const;
-
-    public:
-        void on_send();
-
-    public:
-        template <bool IsRequest, class Body, class Fields>
-        void operator () (boost::beast::http::message<IsRequest, Body, Fields> && message);
-
-    private:
-        enum { queue_limit = 8 };
-
-        struct Work
-        {
-            virtual ~Work() = default;
-            virtual void operator () () = 0;
-        };
-
-        HttpSessionBase                       & m_session;
-        std::vector<std::unique_ptr<Work>>      m_work_items;
-    };
-
+private:
     std::shared_ptr<const std::string>                                                      m_doc_root;
     boost::optional<boost::beast::http::request_parser<boost::beast::http::string_body>>    m_parser;
-    WorkQueue                                                                               m_work_queue;
+    std::queue<boost::beast::http::message_generator>                                       m_response_queue;
 };
-
-template <class Derived>
-HttpSessionBase<Derived>::WorkQueue::WorkQueue(HttpSessionBase<Derived> & session)
-    : m_session(session)
-    , m_work_items()
-{
-    static_assert(queue_limit > 0, "queue limit must be positive");
-    m_work_items.reserve(queue_limit);
-}
-
-template <class Derived>
-bool HttpSessionBase<Derived>::WorkQueue::is_full() const
-{
-    return (m_work_items.size() >= queue_limit);
-}
-
-template <class Derived>
-void HttpSessionBase<Derived>::WorkQueue::on_send()
-{
-    BOOST_ASSERT(!m_work_items.empty());
-
-    m_work_items.erase(m_work_items.begin());
-
-    if (!m_work_items.empty())
-    {
-        (*m_work_items.front())();
-    }
-}
-
-template <class Derived>
-template <bool IsRequest, class Body, class Fields>
-void HttpSessionBase<Derived>::WorkQueue::operator () (boost::beast::http::message<IsRequest, Body, Fields> && message)
-{
-    struct WorkImpl : Work
-    {
-        WorkImpl(HttpSessionBase & http, boost::beast::http::message<IsRequest, Body, Fields> && request)
-            : m_http(http)
-            , m_request(std::move(request))
-        {
-
-        }
-
-        virtual void operator () ()
-        {
-            boost::beast::http::async_write(m_http.derived().stream(), m_request, boost::beast::bind_front_handler(&HttpSessionBase::on_send, m_http.derived().shared_from_this(), m_request.need_eof()));
-        }
-
-        HttpSessionBase                                       & m_http;
-        boost::beast::http::message<IsRequest, Body, Fields>    m_request;
-    };
-
-    m_work_items.push_back(boost::make_unique<WorkImpl>(m_session, std::move(message)));
-
-    if (1 == m_work_items.size())
-    {
-        (*m_work_items.front())();
-    }
-}
 
 template <class Derived>
 HttpSessionBase<Derived>::HttpSessionBase(boost::beast::flat_buffer buffer, const std::shared_ptr<const std::string> & doc_root, Address address, std::chrono::seconds timeout, uint64_t body_limit, unsigned char protocol, WebServiceBase * service)
@@ -163,7 +84,7 @@ HttpSessionBase<Derived>::HttpSessionBase(boost::beast::flat_buffer buffer, cons
     , m_recv_buffer(std::move(buffer))
     , m_doc_root(doc_root)
     , m_parser()
-    , m_work_queue(*this)
+    , m_response_queue()
 {
     BOOST_ASSERT(nullptr != service);
 }
@@ -171,7 +92,7 @@ HttpSessionBase<Derived>::HttpSessionBase(boost::beast::flat_buffer buffer, cons
 template <class Derived>
 Derived & HttpSessionBase<Derived>::derived()
 {
-    return (static_cast<Derived &>(*this));
+    return static_cast<Derived &>(*this);
 }
 
 template <class Derived>
@@ -199,7 +120,15 @@ void HttpSessionBase<Derived>::recv()
     }
 
     boost::beast::get_lowest_layer(derived().stream()).expires_after(m_timeout);
-    boost::beast::http::async_read(derived().stream(), m_recv_buffer, *m_parser, boost::beast::bind_front_handler(&HttpSessionBase::on_recv, derived().shared_from_this()));
+
+    boost::beast::http::async_read(
+        derived().stream(),
+        m_recv_buffer,
+        *m_parser,
+        [self = derived().shared_from_this()](boost::beast::error_code ec, std::size_t bytes_transferred) {
+            self->on_recv(ec, bytes_transferred);
+        }
+    );
 }
 
 template <class Derived>
@@ -242,12 +171,38 @@ void HttpSessionBase<Derived>::on_recv(boost::beast::error_code ec, std::size_t 
         return;
     }
 
-    handle_request(m_service, *m_doc_root, *this, m_parser->release(), m_work_queue);
+    boost::beast::http::message_generator message = handle_request(m_service, *m_doc_root, *this, m_parser->release());
 
-    if (!m_work_queue.is_full())
+    m_response_queue.push(std::move(message));
+
+    if (m_response_queue.size() == 1)
+    {
+        send();
+    }
+
+    if (m_response_queue.size() < queue_limit)
     {
         recv();
     }
+}
+
+template <class Derived>
+void HttpSessionBase<Derived>::send()
+{
+    if (m_response_queue.empty())
+    {
+        return;
+    }
+
+    bool close = !m_response_queue.front().keep_alive();
+
+    boost::beast::async_write(
+        derived().stream(),
+        std::move(m_response_queue.front()),
+        [self = derived().shared_from_this(), close](boost::beast::error_code ec, std::size_t bytes_transferred) {
+            self->on_send(close, ec, bytes_transferred);
+        }
+    );
 }
 
 template <class Derived>
@@ -270,14 +225,14 @@ void HttpSessionBase<Derived>::on_send(bool close, boost::beast::error_code ec, 
         return;
     }
 
-    bool was_full = m_work_queue.is_full();
-
-    m_work_queue.on_send();
-
-    if (was_full)
+    if (m_response_queue.size() == queue_limit)
     {
         recv();
     }
+
+    m_response_queue.pop();
+
+    send();
 }
 
 } // namespace BoostWeb end

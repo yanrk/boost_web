@@ -17,7 +17,6 @@
 #include <type_traits>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
-#include <boost/beast/ssl.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 
@@ -42,7 +41,7 @@ private:
 
 private:
     boost::asio::ip::tcp::resolver                                                          m_resolver;
-    boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>>     m_stream;
+    boost::beast::websocket::stream<boost::asio::ssl::stream<boost::beast::tcp_stream>>     m_stream;
     WebServiceBase                                                                        * m_service;
     const void                                                                            * m_identity;
     std::size_t                                                                             m_timeout;

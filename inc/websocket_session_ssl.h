@@ -23,24 +23,24 @@ namespace BoostWeb { // namespace BoostWeb begin
 class WebsocketsSession : public WebsocketSessionBase<WebsocketsSession>, public std::enable_shared_from_this<WebsocketsSession>
 {
 public:
-    explicit WebsocketsSession(boost::beast::ssl_stream<boost::beast::tcp_stream> && stream, Address address, WebServiceBase * service);
-    explicit WebsocketsSession(boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>> && stream, Address address, WebServiceBase * service);
+    explicit WebsocketsSession(boost::asio::ssl::stream<boost::beast::tcp_stream> && stream, Address address, WebServiceBase * service);
+    explicit WebsocketsSession(boost::beast::websocket::stream<boost::asio::ssl::stream<boost::beast::tcp_stream>> && stream, Address address, WebServiceBase * service);
 
 public:
-    boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>> & websocket();
+    boost::beast::websocket::stream<boost::asio::ssl::stream<boost::beast::tcp_stream>> & websocket();
     const char * protocol() const;
 
 private:
-    boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>>     m_websocket;
+    boost::beast::websocket::stream<boost::asio::ssl::stream<boost::beast::tcp_stream>>     m_websocket;
 };
 
 template <class Body, class Allocator>
-void make_websocket_session(boost::beast::ssl_stream<boost::beast::tcp_stream> stream, Address address, WebServiceBase * service, boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>> req)
+void make_websocket_session(boost::asio::ssl::stream<boost::beast::tcp_stream> stream, Address address, WebServiceBase * service, boost::beast::http::request<Body, boost::beast::http::basic_fields<Allocator>> req)
 {
     std::make_shared<WebsocketsSession>(std::move(stream), std::move(address), service)->run(std::move(req));
 }
 
-void make_websocket_session(boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>> stream, Address address, WebServiceBase * service, const void * identity);
+void make_websocket_session(boost::beast::websocket::stream<boost::asio::ssl::stream<boost::beast::tcp_stream>> stream, Address address, WebServiceBase * service, const void * identity);
 
 } // namespace BoostWeb end
 

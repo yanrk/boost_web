@@ -26,8 +26,8 @@ public:
     HttpsSession(boost::beast::tcp_stream && stream, boost::asio::ssl::context & ctx, boost::beast::flat_buffer && buffer, const std::shared_ptr<const std::string> & doc_root, Address address, std::chrono::seconds timeout, uint64_t body_limit, unsigned char protocol, WebServiceBase * service);
 
 public:
-    boost::beast::ssl_stream<boost::beast::tcp_stream> & stream();
-    boost::beast::ssl_stream<boost::beast::tcp_stream> release_stream();
+    boost::asio::ssl::stream<boost::beast::tcp_stream> & stream();
+    boost::asio::ssl::stream<boost::beast::tcp_stream> release_stream();
     const char * protocol() const;
     support_protocol_t::value_t max_support_protocol() const;
 
@@ -40,7 +40,7 @@ private:
     void on_shutdown(boost::beast::error_code ec);
 
 private:
-    boost::beast::ssl_stream<boost::beast::tcp_stream>                          m_stream;
+    boost::asio::ssl::stream<boost::beast::tcp_stream>                          m_stream;
 };
 
 } // namespace BoostWeb end

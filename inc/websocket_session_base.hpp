@@ -22,8 +22,9 @@
 #include <boost/asio/buffers_iterator.hpp>
 #include <boost/asio/post.hpp>
 #include <boost/beast/core.hpp>
-#include <boost/beast/ssl.hpp>
 #include <boost/beast/websocket.hpp>
+#include <boost/beast/websocket/ssl.hpp>
+#include <boost/core/ignore_unused.hpp>
 #include "address.h"
 #include "boost_web.h"
 
@@ -136,7 +137,7 @@ WebsocketSessionBase<Derived>::WebsocketSessionBase(Address address, WebServiceB
 template <class Derived>
 Derived & WebsocketSessionBase<Derived>::derived()
 {
-    return (static_cast<Derived &>(*this));
+    return static_cast<Derived &>(*this);
 }
 
 template <class Derived>
@@ -148,7 +149,7 @@ void WebsocketSessionBase<Derived>::set_user_data(void * user_data)
 template <class Derived>
 void * WebsocketSessionBase<Derived>::get_user_data() const
 {
-    return (m_user_data);
+    return m_user_data;
 }
 
 template <class Derived>
@@ -168,13 +169,13 @@ void WebsocketSessionBase<Derived>::get_peer_address(std::string & ip, unsigned 
 template <class Derived>
 std::size_t WebsocketSessionBase<Derived>::recv_queue_size()
 {
-    return (m_recv_queue_size);
+    return m_recv_queue_size;
 }
 
 template <class Derived>
 bool WebsocketSessionBase<Derived>::recv_buffer_has_data()
 {
-    return (!m_recv_queue.empty());
+    return !m_recv_queue.empty();
 }
 
 template <class Derived>
@@ -182,9 +183,9 @@ bool WebsocketSessionBase<Derived>::recv_buffer_data_is_text()
 {
     if (m_recv_queue.empty())
     {
-        return (false);
+        return false;
     }
-    return (m_recv_queue.front().m_text);
+    return m_recv_queue.front().m_text;
 }
 
 template <class Derived>
@@ -192,9 +193,9 @@ const void * WebsocketSessionBase<Derived>::recv_buffer_data()
 {
     if (m_recv_queue.empty())
     {
-        return (nullptr);
+        return nullptr;
     }
-    return (boost::asio::buffer_cast<const char *>(m_recv_queue.front().m_buffer.data()));
+    return m_recv_queue.front().m_buffer.data().data();
 }
 
 template <class Derived>
@@ -202,9 +203,9 @@ std::size_t WebsocketSessionBase<Derived>::recv_buffer_size()
 {
     if (m_recv_queue.empty())
     {
-        return (0);
+        return 0;
     }
-    return (m_recv_queue.front().m_buffer.size());
+    return m_recv_queue.front().m_buffer.size();
 }
 
 template <class Derived>
@@ -212,17 +213,17 @@ bool WebsocketSessionBase<Derived>::recv_buffer_drop()
 {
     if (m_recv_queue.empty())
     {
-        return (false);
+        return false;
     }
     m_recv_queue.pop_front();
     --m_recv_queue_size;
-    return (true);
+    return true;
 }
 
 template <class Derived>
 std::size_t WebsocketSessionBase<Derived>::send_queue_size()
 {
-    return (m_send_queue_size);
+    return m_send_queue_size;
 }
 
 template <class Derived>
@@ -232,9 +233,14 @@ bool WebsocketSessionBase<Derived>::send_buffer_fill(bool text, const void * dat
     std::copy_n(reinterpret_cast<const char *>(0 != len ? data : ""), len, boost::asio::buffers_begin(buffer.prepare(len)));
     buffer.commit(len);
 
-    boost::asio::post(derived().websocket().get_executor(), boost::beast::bind_front_handler(&WebsocketSessionBase::on_post, derived().shared_from_this(), std::make_shared<BufferNode>(text, std::move(buffer))));
+    boost::asio::post(
+        derived().websocket().get_executor(),
+        [self = derived().shared_from_this(), node = std::make_shared<BufferNode>(text, std::move(buffer))]() {
+            self->on_post(node);
+        }
+    );
 
-    return (true);
+    return true;
 }
 
 template <class Derived>
@@ -265,7 +271,12 @@ void WebsocketSessionBase<Derived>::run(const void * identity)
 template <class Derived>
 void WebsocketSessionBase<Derived>::eof()
 {
-    derived().websocket().async_close(boost::beast::websocket::normal, boost::beast::bind_front_handler(&WebsocketSessionBase::on_close, derived().shared_from_this()));
+    derived().websocket().async_close(
+        boost::beast::websocket::normal,
+        [self = derived().shared_from_this()](boost::beast::error_code ec) {
+            self->on_close(ec);
+        }
+    );
 }
 
 template <class Derived>
@@ -275,23 +286,43 @@ void WebsocketSessionBase<Derived>::accept(boost::beast::http::request<Body, boo
     derived().websocket().read_message_max(0);
     derived().websocket().set_option(boost::beast::websocket::stream_base::timeout::suggested(boost::beast::role_type::server));
     derived().websocket().set_option(boost::beast::websocket::stream_base::decorator([](boost::beast::websocket::response_type & res){res.set(boost::beast::http::field::server, "boost web server on boost beast");}));
-    derived().websocket().async_accept(req, boost::beast::bind_front_handler(&WebsocketSessionBase::on_accept, derived().shared_from_this()));
+
+    derived().websocket().async_accept(
+        req,
+        [self = derived().shared_from_this()](boost::beast::error_code ec) {
+            self->on_accept(ec);
+        }
+    );
 }
 
 template <class Derived>
 void WebsocketSessionBase<Derived>::recv()
 {
     m_recv_queue.emplace_back(BufferNode(true, boost::beast::flat_buffer()));
+
     BOOST_ASSERT(!m_recv_queue.empty());
-    derived().websocket().async_read(m_recv_queue.back().m_buffer, boost::beast::bind_front_handler(&WebsocketSessionBase::on_recv, derived().shared_from_this()));
+
+    derived().websocket().async_read(
+        m_recv_queue.back().m_buffer,
+        [self = derived().shared_from_this()](boost::beast::error_code ec, std::size_t bytes_transferred) {
+            self->on_recv(ec, bytes_transferred);
+        }
+    );
 }
 
 template <class Derived>
 void WebsocketSessionBase<Derived>::send()
 {
     BOOST_ASSERT(!m_send_queue.empty());
+
     derived().websocket().text(m_send_queue.front().m_text);
-    derived().websocket().async_write(m_send_queue.front().m_buffer.data(), boost::beast::bind_front_handler(&WebsocketSessionBase::on_send, derived().shared_from_this()));
+
+    derived().websocket().async_write(
+        m_send_queue.front().m_buffer.data(),
+        [self = derived().shared_from_this()](boost::beast::error_code ec, std::size_t bytes_transferred) {
+            self->on_send(ec, bytes_transferred);
+        }
+    );
 }
 
 template <class Derived>

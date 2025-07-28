@@ -18,11 +18,11 @@ struct compare_string_ignore_case_t
 {
     bool operator() (const std::string & lhs, const std::string & rhs) const
     {
-#ifdef _MSC_VER
-        return (stricmp(lhs.c_str(), rhs.c_str()) < 0);
+#if defined(_MSC_VER) || defined(_WIN32) || defined(_WIN64)
+        return stricmp(lhs.c_str(), rhs.c_str()) < 0;
 #else
-        return (strcasecmp(lhs.c_str(), rhs.c_str()) < 0);
-#endif // _MSC_VER
+        return strcasecmp(lhs.c_str(), rhs.c_str()) < 0;
+#endif // defined(_MSC_VER) || defined(_WIN32) || defined(_WIN64)
     }
 };
 
@@ -390,11 +390,11 @@ const std::string & MimeType::operator () (const std::string & file_suffix) cons
     std::map<std::string, std::string, compare_string_ignore_case_t>::const_iterator iter = m_mime_type_map.find(file_suffix);
     if (m_mime_type_map.end() != iter)
     {
-        return (iter->second);
+        return iter->second;
     }
     else
     {
-        return (m_default_mime_type);
+        return m_default_mime_type;
     }
 };
 
@@ -404,17 +404,17 @@ const std::string & get_mime_type(const std::string & filename)
     std::string::size_type pos = filename.find_last_of("./");
     if (std::string::npos != pos && '.' == filename[pos])
     {
-        return (mime_type(filename.substr(pos)));
+        return mime_type(filename.substr(pos));
     }
     else
     {
-        return (mime_type(""));
+        return mime_type("");
     }
 }
 
 std::string path_catenate(const std::string & base, const std::string & path)
 {
-    return (base + path);
+    return base + path;
 }
 
 } // namespace BoostWeb end

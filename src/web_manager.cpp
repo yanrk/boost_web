@@ -31,29 +31,29 @@ bool WebManager::init(WebServiceBase * web_service, const ServiceNode * service_
 {
     if (nullptr == web_service)
     {
-        return (false);
+        return false;
     }
 
     if (nullptr != m_manager_impl)
     {
-        return (false);
+        return false;
     }
 
     m_manager_impl = boost::factory<WebManagerImpl *>()();
     if (nullptr == m_manager_impl)
     {
-        return (false);
+        return false;
     }
 
     if (m_manager_impl->init(web_service, service_array, service_count, service_any_valid, pass_file_not_buffer, crt_file_or_buffer, key_file_or_buffer, thread_count))
     {
-        return (true);
+        return true;
     }
 
     boost::checked_delete(m_manager_impl);
     m_manager_impl = nullptr;
 
-    return (false);
+    return false;
 }
 
 void WebManager::exit()
@@ -66,7 +66,7 @@ void WebManager::exit()
     }
 }
 
-void WebManager::get_ports(std::vector<uint16_t> & ports)
+void WebManager::get_ports(std::vector<unsigned short> & ports)
 {
     if (nullptr != m_manager_impl)
     {
@@ -76,24 +76,24 @@ void WebManager::get_ports(std::vector<uint16_t> & ports)
 
 bool WebManager::create_ws_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout)
 {
-    return (nullptr != m_manager_impl && m_manager_impl->create_ws_client(host, port, target, identity, timeout));
+    return nullptr != m_manager_impl && m_manager_impl->create_ws_client(host, port, target, identity, timeout);
 }
 
 bool WebManager::create_ws_client(const char * host, unsigned short port, const char * target, const void * identity, std::size_t timeout)
 {
     std::string str_port = boost::lexical_cast<std::string>(port);
-    return (nullptr != m_manager_impl && m_manager_impl->create_ws_client(host, str_port.c_str(), target, identity, timeout));
+    return nullptr != m_manager_impl && m_manager_impl->create_ws_client(host, str_port.c_str(), target, identity, timeout);
 }
 
 bool WebManager::create_wss_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout)
 {
-    return (nullptr != m_manager_impl && m_manager_impl->create_wss_client(host, port, target, identity, timeout));
+    return nullptr != m_manager_impl && m_manager_impl->create_wss_client(host, port, target, identity, timeout);
 }
 
 bool WebManager::create_wss_client(const char * host, unsigned short port, const char * target, const void * identity, std::size_t timeout)
 {
     std::string str_port = boost::lexical_cast<std::string>(port);
-    return (nullptr != m_manager_impl && m_manager_impl->create_wss_client(host, str_port.c_str(), target, identity, timeout));
+    return nullptr != m_manager_impl && m_manager_impl->create_wss_client(host, str_port.c_str(), target, identity, timeout);
 }
 
 } // namespace BoostWeb end

@@ -21,22 +21,22 @@ HttpSession::HttpSession(boost::beast::tcp_stream && stream, boost::beast::flat_
 
 boost::beast::tcp_stream & HttpSession::stream()
 {
-    return (m_stream);
+    return m_stream;
 }
 
 boost::beast::tcp_stream HttpSession::release_stream()
 {
-    return (std::move(m_stream));
+    return std::move(m_stream);
 }
 
 const char * HttpSession::protocol() const
 {
-    return ("http");
+    return "http";
 }
 
 support_protocol_t::value_t HttpSession::max_support_protocol() const
 {
-    return (support_protocol_t::protocol_plain);
+    return support_protocol_t::protocol_plain;
 }
 
 void HttpSession::run()

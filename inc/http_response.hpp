@@ -80,13 +80,13 @@ void HttpResponse<Body, Fields>::set_result(http_result_t::value_t http_result)
 template <class Body, class Fields>
 http_result_t::value_t HttpResponse<Body, Fields>::get_result() const
 {
-    return (static_cast<http_result_t::value_t>(m_message.result()));
+    return static_cast<http_result_t::value_t>(m_message.result());
 }
 
 template <class Body, class Fields>
 std::size_t HttpResponse<Body, Fields>::get_result_integer() const
 {
-    return (static_cast<std::size_t>(m_message.result_int()));
+    return static_cast<std::size_t>(m_message.result_int());
 }
 
 template <class Body, class Fields>
@@ -98,7 +98,7 @@ void HttpResponse<Body, Fields>::set_reason(const std::string & http_target)
 template <class Body, class Fields>
 std::string HttpResponse<Body, Fields>::get_reason() const
 {
-    return (std::string(m_message.reason()));
+    return std::string(m_message.reason());
 }
 
 } // namespace BoostWeb end

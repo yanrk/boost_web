@@ -12,31 +12,31 @@
 
 namespace BoostWeb { // namespace BoostWeb begin
 
-WebsocketsSession::WebsocketsSession(boost::beast::ssl_stream<boost::beast::tcp_stream> && stream, Address address, WebServiceBase * service)
+WebsocketsSession::WebsocketsSession(boost::asio::ssl::stream<boost::beast::tcp_stream> && stream, Address address, WebServiceBase * service)
     : WebsocketSessionBase<WebsocketsSession>(std::move(address), service)
     , m_websocket(std::move(stream))
 {
 
 }
 
-WebsocketsSession::WebsocketsSession(boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>> && stream, Address address, WebServiceBase * service)
+WebsocketsSession::WebsocketsSession(boost::beast::websocket::stream<boost::asio::ssl::stream<boost::beast::tcp_stream>> && stream, Address address, WebServiceBase * service)
     : WebsocketSessionBase<WebsocketsSession>(std::move(address), service)
     , m_websocket(std::move(stream))
 {
 
 }
 
-boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>> & WebsocketsSession::websocket()
+boost::beast::websocket::stream<boost::asio::ssl::stream<boost::beast::tcp_stream>> & WebsocketsSession::websocket()
 {
-    return (m_websocket);
+    return m_websocket;
 }
 
 const char * WebsocketsSession::protocol() const
 {
-    return ("wss");
+    return "wss";
 }
 
-void make_websocket_session(boost::beast::websocket::stream<boost::beast::ssl_stream<boost::beast::tcp_stream>> stream, Address address, WebServiceBase * service, const void * identity)
+void make_websocket_session(boost::beast::websocket::stream<boost::asio::ssl::stream<boost::beast::tcp_stream>> stream, Address address, WebServiceBase * service, const void * identity)
 {
     std::make_shared<WebsocketsSession>(std::move(stream), std::move(address), service)->run(identity);
 }

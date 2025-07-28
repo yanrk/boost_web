@@ -28,9 +28,9 @@ DetectSession::DetectSession(boost::asio::ip::tcp::socket && socket, boost::asio
     , m_service(service)
 {
     boost::beast::error_code ec;
-    m_address.m_host_ip = m_stream.socket().local_endpoint(ec).address().to_string(ec);
+    m_address.m_host_ip = m_stream.socket().local_endpoint(ec).address().to_string();
     m_address.m_host_port = m_stream.socket().local_endpoint(ec).port();
-    m_address.m_peer_ip = m_stream.socket().remote_endpoint(ec).address().to_string(ec);
+    m_address.m_peer_ip = m_stream.socket().remote_endpoint(ec).address().to_string();
     m_address.m_peer_port = m_stream.socket().remote_endpoint(ec).port();
 
     BOOST_ASSERT(nullptr != service);
@@ -38,14 +38,25 @@ DetectSession::DetectSession(boost::asio::ip::tcp::socket && socket, boost::asio
 
 void DetectSession::run()
 {
-    boost::asio::dispatch(m_stream.get_executor(), boost::beast::bind_front_handler(&DetectSession::on_run, shared_from_this()));
+    boost::asio::dispatch(
+        m_stream.get_executor(),
+        [self = shared_from_this()]() {
+            self->on_run();
+        }
+    );
 }
 
 void DetectSession::on_run()
 {
     m_stream.expires_after(m_timeout);
 
-    boost::beast::async_detect_ssl(m_stream, m_buffer, boost::beast::bind_front_handler(&DetectSession::on_detect, shared_from_this()));
+    boost::beast::async_detect_ssl(
+        m_stream,
+        m_buffer,
+        [self = shared_from_this()](boost::beast::error_code ec, bool result) {
+            self->on_detect(ec, result);
+        }
+    );
 }
 
 void DetectSession::on_detect(boost::beast::error_code ec, bool result)

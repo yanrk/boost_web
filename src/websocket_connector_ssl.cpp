@@ -8,6 +8,7 @@
  * Copyright(C): 2019 - 2020
  ********************************************************/
 
+#include <boost/core/ignore_unused.hpp>
 #include "address.h"
 #include "boost_web.h"
 #include "websocket_session_ssl.h"
@@ -36,7 +37,13 @@ void WebsocketsConnector::error(const char * what, boost::beast::error_code ec)
 
 void WebsocketsConnector::run()
 {
-    m_resolver.async_resolve(m_host, m_port, boost::beast::bind_front_handler(&WebsocketsConnector::on_resolve, shared_from_this()));
+    m_resolver.async_resolve(
+        m_host,
+        m_port,
+        [self = shared_from_this()](boost::beast::error_code ec, boost::asio::ip::tcp::resolver::results_type results) {
+            self->on_resolve(ec, std::move(results));
+        }
+    );
 }
 
 void WebsocketsConnector::on_resolve(boost::beast::error_code ec, boost::asio::ip::tcp::resolver::results_type results)
@@ -48,7 +55,13 @@ void WebsocketsConnector::on_resolve(boost::beast::error_code ec, boost::asio::i
     }
 
     boost::beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(m_timeout));
-    boost::beast::get_lowest_layer(m_stream).async_connect(results, boost::beast::bind_front_handler(&WebsocketsConnector::on_connect, shared_from_this()));
+
+    boost::beast::get_lowest_layer(m_stream).async_connect(
+        results,
+        [self = shared_from_this()](boost::beast::error_code ec, boost::asio::ip::tcp::resolver::results_type::endpoint_type endpoint) {
+            self->on_connect(ec, std::move(endpoint));
+        }
+    );
 }
 
 void WebsocketsConnector::on_connect(boost::beast::error_code ec, boost::asio::ip::tcp::resolver::results_type::endpoint_type endpoint)
@@ -62,7 +75,13 @@ void WebsocketsConnector::on_connect(boost::beast::error_code ec, boost::asio::i
     }
 
     boost::beast::get_lowest_layer(m_stream).expires_after(std::chrono::seconds(m_timeout));
-    m_stream.next_layer().async_handshake(boost::asio::ssl::stream_base::client, boost::beast::bind_front_handler(&WebsocketsConnector::on_ssl_handshake, shared_from_this()));
+
+    m_stream.next_layer().async_handshake(
+        boost::asio::ssl::stream_base::client,
+        [self = shared_from_this()](boost::beast::error_code ec) {
+            self->on_ssl_handshake(ec);
+        }
+    );
 }
 
 void WebsocketsConnector::on_ssl_handshake(boost::beast::error_code ec)
@@ -77,7 +96,14 @@ void WebsocketsConnector::on_ssl_handshake(boost::beast::error_code ec)
     m_stream.read_message_max(0);
     m_stream.set_option(boost::beast::websocket::stream_base::timeout::suggested(boost::beast::role_type::client));
     m_stream.set_option(boost::beast::websocket::stream_base::decorator([](boost::beast::websocket::request_type & req){req.set(boost::beast::http::field::user_agent, "boost web client on boost beast");}));
-    m_stream.async_handshake(m_host, m_target, boost::beast::bind_front_handler(&WebsocketsConnector::on_handshake, shared_from_this()));
+
+    m_stream.async_handshake(
+        m_host,
+        m_target,
+        [self = shared_from_this()](boost::beast::error_code ec) {
+            self->on_handshake(ec);
+        }
+    );
 }
 
 void WebsocketsConnector::on_handshake(boost::beast::error_code ec)
@@ -89,9 +115,9 @@ void WebsocketsConnector::on_handshake(boost::beast::error_code ec)
     }
 
     Address address;
-    address.m_host_ip = boost::beast::get_lowest_layer(m_stream).socket().local_endpoint(ec).address().to_string(ec);
+    address.m_host_ip = boost::beast::get_lowest_layer(m_stream).socket().local_endpoint(ec).address().to_string();
     address.m_host_port = boost::beast::get_lowest_layer(m_stream).socket().local_endpoint(ec).port();
-    address.m_peer_ip = boost::beast::get_lowest_layer(m_stream).socket().remote_endpoint(ec).address().to_string(ec);
+    address.m_peer_ip = boost::beast::get_lowest_layer(m_stream).socket().remote_endpoint(ec).address().to_string();
     address.m_peer_port = boost::beast::get_lowest_layer(m_stream).socket().remote_endpoint(ec).port();
 
     make_websocket_session(std::move(m_stream), std::move(address), m_service, m_identity);

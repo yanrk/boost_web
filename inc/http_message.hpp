@@ -64,7 +64,7 @@ void HttpMessage<IsRequest, Body, Fields, MessageBase>::set_version(http_version
 template <bool IsRequest, class Body, class Fields, class MessageBase>
 http_version_t::value_t HttpMessage<IsRequest, Body, Fields, MessageBase>::get_version() const
 {
-    return (static_cast<http_version_t::value_t>(m_message.version()));
+    return static_cast<http_version_t::value_t>(m_message.version());
 }
 
 template <bool IsRequest, class Body, class Fields, class MessageBase>
@@ -76,7 +76,7 @@ void HttpMessage<IsRequest, Body, Fields, MessageBase>::set_field_server(const s
 template <bool IsRequest, class Body, class Fields, class MessageBase>
 std::string HttpMessage<IsRequest, Body, Fields, MessageBase>::get_field_server() const
 {
-    return (m_message[boost::beast::http::field::server].to_string());
+    return m_message[boost::beast::http::field::server];
 }
 
 template <bool IsRequest, class Body, class Fields, class MessageBase>
@@ -88,7 +88,7 @@ void HttpMessage<IsRequest, Body, Fields, MessageBase>::set_field_accept(const s
 template <bool IsRequest, class Body, class Fields, class MessageBase>
 std::string HttpMessage<IsRequest, Body, Fields, MessageBase>::get_field_accept() const
 {
-    return (m_message[boost::beast::http::field::accept].to_string());
+    return m_message[boost::beast::http::field::accept];
 }
 
 template <bool IsRequest, class Body, class Fields, class MessageBase>
@@ -100,7 +100,7 @@ void HttpMessage<IsRequest, Body, Fields, MessageBase>::set_field_cookie(const s
 template <bool IsRequest, class Body, class Fields, class MessageBase>
 std::string HttpMessage<IsRequest, Body, Fields, MessageBase>::get_field_cookie() const
 {
-    return (m_message[boost::beast::http::field::cookie].to_string());
+    return m_message[boost::beast::http::field::cookie];
 }
 
 template <bool IsRequest, class Body, class Fields, class MessageBase>
@@ -112,7 +112,7 @@ void HttpMessage<IsRequest, Body, Fields, MessageBase>::set_field_user_agent(con
 template <bool IsRequest, class Body, class Fields, class MessageBase>
 std::string HttpMessage<IsRequest, Body, Fields, MessageBase>::get_field_user_agent() const
 {
-    return (m_message[boost::beast::http::field::user_agent].to_string());
+    return m_message[boost::beast::http::field::user_agent];
 }
 
 template <bool IsRequest, class Body, class Fields, class MessageBase>
@@ -124,7 +124,7 @@ void HttpMessage<IsRequest, Body, Fields, MessageBase>::set_field_content_type(c
 template <bool IsRequest, class Body, class Fields, class MessageBase>
 std::string HttpMessage<IsRequest, Body, Fields, MessageBase>::get_field_content_type() const
 {
-    return (m_message[boost::beast::http::field::content_type].to_string());
+    return m_message[boost::beast::http::field::content_type];
 }
 
 template <bool IsRequest, class Body, class Fields, class MessageBase>
@@ -136,7 +136,7 @@ void HttpMessage<IsRequest, Body, Fields, MessageBase>::set_field_content_md5(co
 template <bool IsRequest, class Body, class Fields, class MessageBase>
 std::string HttpMessage<IsRequest, Body, Fields, MessageBase>::get_field_content_md5() const
 {
-    return (m_message[boost::beast::http::field::content_md5].to_string());
+    return m_message[boost::beast::http::field::content_md5];
 }
 
 template <bool IsRequest, class Body, class Fields, class MessageBase>
@@ -148,7 +148,7 @@ void HttpMessage<IsRequest, Body, Fields, MessageBase>::set_body(const std::stri
 template <bool IsRequest, class Body, class Fields, class MessageBase>
 const std::string & HttpMessage<IsRequest, Body, Fields, MessageBase>::get_body() const
 {
-    return (m_message.body());
+    return m_message.body();
 }
 
 template <bool IsRequest, class Body, class Fields, class MessageBase>
@@ -160,7 +160,7 @@ void HttpMessage<IsRequest, Body, Fields, MessageBase>::set_body(std::string && 
 template <bool IsRequest, class Body, class Fields, class MessageBase>
 std::string && HttpMessage<IsRequest, Body, Fields, MessageBase>::get_body()
 {
-    return (std::move(m_message.body()));
+    return std::move(m_message.body());
 }
 
 } // namespace BoostWeb end

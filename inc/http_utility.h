@@ -24,8 +24,8 @@ namespace BoostWeb { // namespace BoostWeb begin
 extern const std::string & get_mime_type(const std::string & filename);
 extern std::string path_catenate(const std::string & base, const std::string & path);
 
-template <class Body, class Fields, class Send>
-void handle_request(WebServiceBase * service, const std::string & doc_root, const HttpConnectionBase & connection, boost::beast::http::request<Body, Fields> && req, Send && send)
+template <class Body, class Fields>
+boost::beast::http::message_generator handle_request(WebServiceBase * service, const std::string & doc_root, const HttpConnectionBase & connection, boost::beast::http::request<Body, Fields> && req)
 {
     auto const bad_request = [&req](boost::beast::string_view why)
     {
@@ -36,7 +36,7 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, cons
         res.keep_alive(req.keep_alive());
         res.body() = std::string(why);
         res.prepare_payload();
-        return (res);
+        return res;
     };
 
     auto const not_found = [&req](boost::beast::string_view target)
@@ -48,7 +48,7 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, cons
         res.keep_alive(req.keep_alive());
         res.body() = "The resource '" + std::string(target) + "' was not found";
         res.prepare_payload();
-        return (res);
+        return res;
     };
 
     auto const server_error = [&req](boost::beast::string_view what)
@@ -60,7 +60,7 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, cons
         res.keep_alive(req.keep_alive());
         res.body() = "An error occurred: '" + std::string(what) + "'";
         res.prepare_payload();
-        return (res);
+        return res;
     };
 
     const std::string request_target(req.target());
@@ -69,7 +69,7 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, cons
     std::replace(request_target_append_slash.begin(), request_target_append_slash.end(), '\\', '/');
     if (request_target.empty() || '/' != request_target.front() || std::string::npos != request_target_append_slash.find("/../"))
     {
-        return (send(bad_request("Illegal request-target '" + request_target + "'")));
+        return bad_request("Illegal request-target '" + request_target + "'");
     }
 
     if (service->target_is_path(request_target))
@@ -86,12 +86,12 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, cons
 
         if (boost::system::errc::no_such_file_or_directory == ec)
         {
-            return (send(not_found(req.target())));
+            return not_found(req.target());
         }
 
         if (ec)
         {
-            return (send(server_error(ec.message())));
+            return server_error(ec.message());
         }
 
         /*
@@ -107,7 +107,7 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, cons
             res.set(boost::beast::http::field::access_control_allow_origin, "*");
             res.content_length(body_size);
             res.keep_alive(req.keep_alive());
-            return (send(std::move(res)));
+            return std::move(res);
         }
         else if (boost::beast::http::verb::get == req.method())
         {
@@ -117,18 +117,18 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, cons
             res.set(boost::beast::http::field::access_control_allow_origin, "*");
             res.content_length(body_size);
             res.keep_alive(req.keep_alive());
-            return (send(std::move(res)));
+            return std::move(res);
         }
         else
         {
-            return (send(bad_request("Unsupported HTTP-method '" + std::string(req.method_string()) + "' while request file")));
+            return bad_request("Unsupported HTTP-method '" + std::string(req.method_string()) + "' while request file");
         }
     }
     else
     {
         if (boost::beast::http::verb::connect < req.method())
         {
-            return (send(bad_request("Unsupported HTTP-method '" + std::string(req.method_string()) + "'")));
+            return bad_request("Unsupported HTTP-method '" + std::string(req.method_string()) + "'");
         }
 
         boost::beast::http::response<boost::beast::http::string_body, Fields> res;
@@ -140,7 +140,7 @@ void handle_request(WebServiceBase * service, const std::string & doc_root, cons
         service->handle_request(connection, request, response);
         res.keep_alive(req.keep_alive());
         res.prepare_payload();
-        return (send(std::move(res)));
+        return std::move(res);
     }
 }
 

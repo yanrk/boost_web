@@ -19,41 +19,48 @@ HttpsSession::HttpsSession(boost::beast::tcp_stream && stream, boost::asio::ssl:
 
 }
 
-boost::beast::ssl_stream<boost::beast::tcp_stream> & HttpsSession::stream()
+boost::asio::ssl::stream<boost::beast::tcp_stream> & HttpsSession::stream()
 {
-    return (m_stream);
+    return m_stream;
 }
 
-boost::beast::ssl_stream<boost::beast::tcp_stream> HttpsSession::release_stream()
+boost::asio::ssl::stream<boost::beast::tcp_stream> HttpsSession::release_stream()
 {
-    return (std::move(m_stream));
+    return std::move(m_stream);
 }
 
 const char * HttpsSession::protocol() const
 {
-    return ("https");
+    return "https";
 }
 
 support_protocol_t::value_t HttpsSession::max_support_protocol() const
 {
-    return (support_protocol_t::protocol_ssl);
+    return support_protocol_t::protocol_ssl;
 }
 
 void HttpsSession::run()
 {
     boost::beast::get_lowest_layer(m_stream).expires_after(m_timeout);
 
-    /*
-     * this is the buffered version of the handshake
-     */
-    m_stream.async_handshake(boost::asio::ssl::stream_base::server, m_recv_buffer.data(), boost::beast::bind_front_handler(&HttpsSession::on_handshake, shared_from_this()));
+    m_stream.async_handshake(
+        boost::asio::ssl::stream_base::server,
+        m_recv_buffer.data(),
+        [self = shared_from_this()](boost::beast::error_code ec, std::size_t bytes_used) {
+            self->on_handshake(ec, bytes_used);
+        }
+    );
 }
 
 void HttpsSession::eof()
 {
     boost::beast::get_lowest_layer(m_stream).expires_after(m_timeout);
 
-    m_stream.async_shutdown(boost::beast::bind_front_handler(&HttpsSession::on_shutdown, shared_from_this()));
+    m_stream.async_shutdown(
+        [self = shared_from_this()](boost::beast::error_code ec) {
+            self->on_shutdown(ec);
+        }
+    );
 }
 
 void HttpsSession::on_handshake(boost::beast::error_code ec, std::size_t bytes_used)

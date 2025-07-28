@@ -67,12 +67,17 @@ bool Listener::run()
     {
         accept();
     }
-    return (m_good);
+    return m_good;
 }
 
 void Listener::accept()
 {
-    m_acceptor.async_accept(boost::asio::make_strand(m_ioc), boost::beast::bind_front_handler(&Listener::on_accept, shared_from_this()));
+    m_acceptor.async_accept(
+        boost::asio::make_strand(m_ioc),
+        [self = shared_from_this()](boost::beast::error_code ec, boost::asio::ip::tcp::socket socket) {
+            self->on_accept(ec, std::move(socket));
+        }
+    );
 }
 
 void Listener::on_accept(boost::beast::error_code ec, boost::asio::ip::tcp::socket socket)

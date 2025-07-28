@@ -19,9 +19,8 @@
 #include <boost/asio/ssl.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/asio/io_context.hpp>
-#include <boost/asio/bind_executor.hpp>
 #include <boost/beast/core.hpp>
-#include <boost/beast/ssl.hpp>
+#include <boost/beast/websocket/ssl.hpp>
 #include "address.h"
 #include "boost_web.h"
 

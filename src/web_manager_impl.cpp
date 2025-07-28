@@ -43,7 +43,7 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
 {
     if (nullptr == web_service)
     {
-        return (false);
+        return false;
     }
 
     m_web_service = web_service;
@@ -56,9 +56,14 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
     int signal_interrupt = SIGINT;
     int signal_terminate = SIGTERM;
     m_signal_sets.push_back(boost::factory<boost::asio::signal_set *>()(m_io_contexts.back(), signal_interrupt, signal_terminate));
-    m_signal_sets.back().async_wait([this](const boost::beast::error_code &, int) { this->m_io_contexts.back().stop(); });
 
-    m_alive_works.push_back(boost::factory<boost::asio::io_context::work *>()(m_io_contexts.back()));
+    m_signal_sets.back().async_wait(
+        [this](const boost::beast::error_code &, int) {
+            this->m_io_contexts.back().stop();
+        }
+    );
+
+    m_alive_works.push_back(boost::factory<boost::asio::executor_work_guard<boost::asio::io_context::executor_type> *>()(boost::asio::make_work_guard(m_io_contexts.back())));
 
     m_web_ports.clear();
 
@@ -81,12 +86,12 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
             catch (boost::beast::error_code & ec)
             {
                 m_web_service->on_error("ssl", "file", ec.value(), ec.message().c_str());
-                return (false);
+                return false;
             }
             catch (std::exception & ex)
             {
                 m_web_service->on_error("ssl", "file", 1, ex.what());
-                return (false);
+                return false;
             }
         }
     }
@@ -112,12 +117,12 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
             catch (boost::beast::error_code & ec)
             {
                 m_web_service->on_error("ssl", "file", ec.value(), ec.message().c_str());
-                return (false);
+                return false;
             }
             catch (std::exception & ex)
             {
                 m_web_service->on_error("ssl", "file", 1, ex.what());
-                return (false);
+                return false;
             }
             unsupported_protocols = 0x0;
         }
@@ -136,7 +141,7 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
                 {
                     m_web_service->on_error("init", "protocol", 1, "no support protocol");
                 }
-                else if (std::make_shared<Listener>(m_io_contexts.back(), m_ssl_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(service_node.host), service_node.port), std::make_shared<std::string>(service_node.root), service_node.timeout, service_node.body_limit, protocol, m_web_service)->run())
+                else if (std::make_shared<Listener>(m_io_contexts.back(), m_ssl_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::make_address(service_node.host), service_node.port), std::make_shared<std::string>(service_node.root), service_node.timeout, service_node.body_limit, protocol, m_web_service)->run())
                 {
                     m_web_ports.push_back(service_node.port);
                     break;
@@ -145,12 +150,12 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
             }
             if (index == service_count)
             {
-                return (false);
+                return false;
             }
         }
         else
         {
-            std::vector<uint16_t> service_node_ports;
+            std::vector<unsigned short> service_node_ports;
             for (std::size_t index = 0; index < service_count; ++index)
             {
                 const ServiceNode & service_node = service_array[index];
@@ -161,11 +166,11 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
                 if (0 == protocol)
                 {
                     m_web_service->on_error("init", "protocol", 1, "no support protocol");
-                    return (false);
+                    return false;
                 }
-                else if (!std::make_shared<Listener>(m_io_contexts.back(), m_ssl_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::address_v4::from_string(service_node.host), service_node.port), std::make_shared<std::string>(service_node.root), service_node.timeout, service_node.body_limit, protocol, m_web_service)->run())
+                else if (!std::make_shared<Listener>(m_io_contexts.back(), m_ssl_context, boost::asio::ip::tcp::endpoint(boost::asio::ip::make_address(service_node.host), service_node.port), std::make_shared<std::string>(service_node.root), service_node.timeout, service_node.body_limit, protocol, m_web_service)->run())
                 {
-                    return (false);
+                    return false;
                 }
                 service_node_ports.push_back(service_node.port);
             }
@@ -179,7 +184,7 @@ bool WebManagerImpl::init(WebServiceBase * web_service, const ServiceNode * serv
         m_thread_list.push_back(boost::factory<std::thread *>()(thread_func));
     }
 
-    return (true);
+    return true;
 }
 
 void WebManagerImpl::exit()
@@ -200,7 +205,7 @@ void WebManagerImpl::exit()
     m_web_ports.clear();
 }
 
-void WebManagerImpl::get_ports(std::vector<uint16_t> & ports)
+void WebManagerImpl::get_ports(std::vector<unsigned short> & ports)
 {
     ports = m_web_ports;
 }
@@ -209,20 +214,20 @@ bool WebManagerImpl::create_ws_client(const char * host, const char * port, cons
 {
     if (nullptr == host || nullptr == port || nullptr == target || '/' != *target)
     {
-        return (false);
+        return false;
     }
     std::make_shared<WebsocketConnector>(m_io_contexts.back(), m_web_service, identity, timeout, host, port, target)->run();
-    return (true);
+    return true;
 }
 
 bool WebManagerImpl::create_wss_client(const char * host, const char * port, const char * target, const void * identity, std::size_t timeout)
 {
     if (nullptr == host || nullptr == port || nullptr == target || '/' != *target)
     {
-        return (false);
+        return false;
     }
     std::make_shared<WebsocketsConnector>(m_io_contexts.back(), m_ssl_context, m_web_service, identity, timeout, host, port, target)->run();
-    return (true);
+    return true;
 }
 
 } // namespace BoostWeb end
