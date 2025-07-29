@@ -1,14 +1,27 @@
 #include "test_service.h"
 
-int main(int, char *[])
+int main(int argc, char * argv[])
 {
-    TestService server(true, false, true, 1000, 10);
+    if (argc < 2)
+    {
+        TestService server(true, false, true, 1000, 10);
 
-    server.init();
+        server.init();
 
-    getchar();
+        getchar();
 
-    server.exit();
+        server.exit();
+    }
+    else
+    {
+        TestService client(false, false, false, 1000, 10);
+
+        client.init();
+
+        getchar();
+
+        client.exit();
+    }
 
     return (0);
 }

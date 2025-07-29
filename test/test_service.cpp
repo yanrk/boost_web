@@ -314,14 +314,14 @@ bool TestService::check_message(BoostWeb::WebsocketConnectionSharedPtr connectio
 
 bool TestService::init()
 {
-    const char * crt_file = "f:/codes/codes/transmission/web_transmit_adapter/res/local.foxrenderfarm.com.crt";
-    const char * key_file = "f:/codes/codes/transmission/web_transmit_adapter/res/local.foxrenderfarm.com.key";
+    const char * crt_file = "test.crt";
+    const char * key_file = "test.key";
     if (m_server)
     {
         BoostWeb::ServiceNode server_node;
         server_node.host = "0.0.0.0";
         server_node.port = 12345;
-        server_node.root = "f:/codes_vs2015/munu/munu/www";
+        server_node.root = "./";
         server_node.timeout = 15;
         server_node.body_limit = 0;
         server_node.protocol = BoostWeb::support_protocol_t::protocol_all;

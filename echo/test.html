@@ -34,25 +34,24 @@
             }
 
             function sendBinary() {
-                var number = document.getElementById("inputBinary").value;
-                if ( websocket != null )
+                var input = document.getElementById("inputBinary").value;
+                if ( websocket != null && WebSocket.OPEN == websocket.readyState )
                 {
                     document.getElementById("inputBinary").value = "";
-                    binary = new Uint8Array(number);
-                    websocket.send( binary );
-                    debug("send binary: ");
-                    debug("send data size is " + number);
+                    binary = new TextEncoder().encode(input);
+                    debug("send binary data size is " + binary.byteLength);
+                    websocket.send(binary);
                 }
             }
 
             function sendText() {
-                var text = document.getElementById("inputText").value;
-                if ( websocket != null )
+                var input = document.getElementById("inputText").value;
+                if ( websocket != null && WebSocket.OPEN == websocket.readyState )
                 {
                     document.getElementById("inputText").value = "";
-                    websocket.send( text );
-                    debug("send text: ");
-                    debug(text);
+                    debug("send text: <" + input + ">");
+                    debug("send text data size is " + new TextEncoder().encode(input).byteLength);
+                    websocket.send( input );
                 }
             }
 
@@ -71,11 +70,10 @@
                     };
                     websocket.onmessage = function (evt) {
                         if (evt.data instanceof Blob) {
-                            debug("recv binary: ");
-                            debug("recv data size is " + evt.data.size)
+                            debug("recv binary data size is " + evt.data.size)
                         } else {
-                            debug("recv text: ");
-                            debug(evt.data);
+                            debug("recv text: <" + evt.data + ">");
+                            debug("recv text data size is " + new TextEncoder().encode(evt.data).byteLength)
                         }
                     };
                     websocket.onerror = function (evt) {
