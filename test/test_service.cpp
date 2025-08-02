@@ -28,7 +28,7 @@ TestService::~TestService()
 
 bool TestService::target_is_path(const std::string & target)
 {
-    return ("/sys/" != target.substr(0, 5));
+    return "/sys/" != target.substr(0, 5);
 }
 
 bool TestService::handle_request(const BoostWeb::HttpConnectionBase & connection, const BoostWeb::HttpRequestBase & request, BoostWeb::HttpResponseBase & response)
@@ -68,7 +68,7 @@ bool TestService::handle_request(const BoostWeb::HttpConnectionBase & connection
         }
     }
     response.set_body("recv request (" + request.get_method_string() + ": " + request.get_target() + ", {" + request.get_body() + "})");
-    return (true);
+    return true;
 }
 
 void TestService::on_error(const char * protocol, const char * what, int error, const char * message)
@@ -78,22 +78,22 @@ void TestService::on_error(const char * protocol, const char * what, int error, 
 
 bool TestService::on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, const void * identity)
 {
-    return (!!connection && insert_connection(connection) && send_message(connection));
+    return !!connection && insert_connection(connection) && send_message(connection);
 }
 
 bool TestService::on_accept(BoostWeb::WebsocketConnectionSharedPtr connection, unsigned short listener_port)
 {
-    return (!!connection && insert_connection(connection));
+    return !!connection && insert_connection(connection);
 }
 
 bool TestService::on_recv(BoostWeb::WebsocketConnectionSharedPtr connection)
 {
-    return (recv_message(connection));
+    return recv_message(connection);
 }
 
 bool TestService::on_send(BoostWeb::WebsocketConnectionSharedPtr connection)
 {
-    return (true);
+    return true;
 }
 
 void TestService::on_error(BoostWeb::WebsocketConnectionSharedPtr connection, const char * protocol, const char * what, int error, const char * message)
@@ -180,7 +180,7 @@ bool TestService::insert_connection(BoostWeb::WebsocketConnectionSharedPtr conne
     connection->get_peer_address(peer_ip, peer_port);
     printf("websocket(s) connect: %u, [%s:%u] -> [%s:%u]\n", static_cast<uint32_t>(++m_connect_count), host_ip.c_str(), host_port, peer_ip.c_str(), peer_port);
     connection->set_user_data(reinterpret_cast<void *>(0));
-    return (true);
+    return true;
 }
 
 bool TestService::remove_connection(BoostWeb::WebsocketConnectionSharedPtr connection)
@@ -193,14 +193,14 @@ bool TestService::remove_connection(BoostWeb::WebsocketConnectionSharedPtr conne
     connection->get_peer_address(peer_ip, peer_port);
     printf("websocket(s) disconnect: %u, [%s:%u] -> [%s:%u]\n", static_cast<uint32_t>(++m_disconnect_count), host_ip.c_str(), host_port, peer_ip.c_str(), peer_port);
     std::size_t count = reinterpret_cast<std::size_t>(connection->get_user_data());
-    return (true);
+    return true;
 }
 
 bool TestService::send_message(BoostWeb::WebsocketConnectionSharedPtr connection)
 {
     if (0 == m_max_message_count)
     {
-        return (true);
+        return true;
     }
 
     std::size_t count = reinterpret_cast<std::size_t>(connection->get_user_data());
@@ -213,7 +213,7 @@ bool TestService::send_message(BoostWeb::WebsocketConnectionSharedPtr connection
         unsigned short peer_port = 0;
         connection->get_peer_address(peer_ip, peer_port);
         printf("send finish: %u, [%s:%u] -> [%s:%u]\n", static_cast<uint32_t>(++m_send_finish_count), host_ip.c_str(), host_port, peer_ip.c_str(), peer_port);
-        return (false);
+        return false;
     }
 
     ++count;
@@ -229,12 +229,12 @@ bool TestService::send_message(BoostWeb::WebsocketConnectionSharedPtr connection
     if (!connection->send_buffer_fill(m_text, data.c_str(), data.size()))
     {
         assert(false);
-        return (false);
+        return false;
     }
 
     printf("send %zu\n", count);
 
-    return (true);
+    return true;
 }
 
 bool TestService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection)
@@ -244,13 +244,13 @@ bool TestService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
     if (!connection->recv_buffer_has_data())
     {
         assert(false);
-        return (false);
+        return false;
     }
 
     if (connection->recv_buffer_data_is_text() != m_text)
     {
         assert(false);
-        return (false);
+        return false;
     }
 
     const char * data = reinterpret_cast<const char *>(connection->recv_buffer_data());
@@ -259,13 +259,13 @@ bool TestService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
     if (!check_message(connection, data, len))
     {
         assert(false);
-        return (false);
+        return false;
     }
 
     if (!connection->recv_buffer_drop())
     {
         assert(false);
-        return (false);
+        return false;
     }
 
     std::size_t count = reinterpret_cast<std::size_t>(connection->get_user_data());
@@ -274,10 +274,10 @@ bool TestService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
 
     if (!send_message(connection))
     {
-        return (false);
+        return false;
     }
 
-    return (true);
+    return true;
 }
 
 bool TestService::check_message(BoostWeb::WebsocketConnectionSharedPtr connection, const char * data, std::size_t len)
@@ -286,7 +286,7 @@ bool TestService::check_message(BoostWeb::WebsocketConnectionSharedPtr connectio
     if (count >= m_max_message_count)
     {
         assert(false);
-        return (false);
+        return false;
     }
 
     ++count;
@@ -296,7 +296,7 @@ bool TestService::check_message(BoostWeb::WebsocketConnectionSharedPtr connectio
     if (msg_len * count != len)
     {
         assert(false);
-        return (false);
+        return false;
     }
 
     for (std::size_t index = 0; index < count; ++index)
@@ -309,7 +309,7 @@ bool TestService::check_message(BoostWeb::WebsocketConnectionSharedPtr connectio
         len -= msg_len;
     }
 
-    return (true);
+    return true;
 }
 
 bool TestService::init()
@@ -327,14 +327,14 @@ bool TestService::init()
         server_node.protocol = BoostWeb::support_protocol_t::protocol_all;
         if (!m_web_manager.init(this, &server_node, 1, false, true, crt_file, key_file, 1))
         {
-            return (false);
+            return false;
         }
     }
     else
     {
         if (!m_web_manager.init(this, nullptr, 0, false, true, nullptr, nullptr, 1))
         {
-            return (false);
+            return false;
         }
         for (std::size_t index = 0; index < m_max_connect_count; ++index)
         {
@@ -357,7 +357,7 @@ bool TestService::init()
         }
     }
 
-    return (true);
+    return true;
 }
 
 void TestService::exit()

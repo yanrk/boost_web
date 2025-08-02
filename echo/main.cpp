@@ -10,5 +10,5 @@ int main(int, char *[])
 
     server.exit();
 
-    return (0);
+    return 0;
 }

@@ -23,5 +23,5 @@ int main(int argc, char * argv[])
         client.exit();
     }
 
-    return (0);
+    return 0;
 }

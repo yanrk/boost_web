@@ -24,13 +24,13 @@ EchoService::~EchoService()
 bool EchoService::target_is_path(const std::string & target)
 {
     assert(false);
-    return (false);
+    return false;
 }
 
 bool EchoService::handle_request(const BoostWeb::HttpConnectionBase & connection, const BoostWeb::HttpRequestBase & request, BoostWeb::HttpResponseBase & response)
 {
     assert(false);
-    return (false);
+    return false;
 }
 
 void EchoService::on_error(const char * protocol, const char * what, int error, const char * message)
@@ -41,22 +41,22 @@ void EchoService::on_error(const char * protocol, const char * what, int error, 
 bool EchoService::on_connect(BoostWeb::WebsocketConnectionSharedPtr connection, const void * identity)
 {
     assert(false);
-    return (false);
+    return false;
 }
 
 bool EchoService::on_accept(BoostWeb::WebsocketConnectionSharedPtr connection, unsigned short listener_port)
 {
-    return (!!connection && insert_connection(connection) && send_message(connection, true, hello_data, hello_size));
+    return !!connection && insert_connection(connection) && send_message(connection, true, hello_data, hello_size);
 }
 
 bool EchoService::on_recv(BoostWeb::WebsocketConnectionSharedPtr connection)
 {
-    return (recv_message(connection));
+    return recv_message(connection);
 }
 
 bool EchoService::on_send(BoostWeb::WebsocketConnectionSharedPtr connection)
 {
-    return (true);
+    return true;
 }
 
 void EchoService::on_error(BoostWeb::WebsocketConnectionSharedPtr connection, const char * protocol, const char * what, int error, const char * message)
@@ -83,7 +83,7 @@ bool EchoService::insert_connection(BoostWeb::WebsocketConnectionSharedPtr conne
     unsigned short peer_port = 0;
     connection->get_peer_address(peer_ip, peer_port);
     printf("websocket connect: %u, [%s:%d] -> [%s:%d]\n", static_cast<uint32_t>(++m_connect_count), host_ip.c_str(), host_port, peer_ip.c_str(), peer_port);
-    return (true);
+    return true;
 }
 
 bool EchoService::remove_connection(BoostWeb::WebsocketConnectionSharedPtr connection)
@@ -95,7 +95,7 @@ bool EchoService::remove_connection(BoostWeb::WebsocketConnectionSharedPtr conne
     unsigned short peer_port = 0;
     connection->get_peer_address(peer_ip, peer_port);
     printf("websocket disconnect: %u, [%s:%d] -> [%s:%d]\n", static_cast<uint32_t>(++m_disconnect_count), host_ip.c_str(), host_port, peer_ip.c_str(), peer_port);
-    return (true);
+    return true;
 }
 
 bool EchoService::send_message(BoostWeb::WebsocketConnectionSharedPtr connection, bool text, const void * data, std::size_t size)
@@ -103,7 +103,7 @@ bool EchoService::send_message(BoostWeb::WebsocketConnectionSharedPtr connection
     if (!connection->send_buffer_fill(text, data, size))
     {
         assert(false);
-        return (false);
+        return false;
     }
 
     if (text)
@@ -115,7 +115,7 @@ bool EchoService::send_message(BoostWeb::WebsocketConnectionSharedPtr connection
         printf("send binary data, size (%zu)\n", size);
     }
 
-    return (true);
+    return true;
 }
 
 bool EchoService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection)
@@ -123,7 +123,7 @@ bool EchoService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
     if (!connection->recv_buffer_has_data())
     {
         assert(false);
-        return (false);
+        return false;
     }
 
     bool text = connection->recv_buffer_data_is_text();
@@ -132,7 +132,7 @@ bool EchoService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
     if (!connection->recv_buffer_drop())
     {
         assert(false);
-        return (false);
+        return false;
     }
 
     if (text)
@@ -146,10 +146,10 @@ bool EchoService::recv_message(BoostWeb::WebsocketConnectionSharedPtr connection
 
     if (!send_message(connection, text, data.c_str(), data.size()))
     {
-        return (false);
+        return false;
     }
 
-    return (true);
+    return true;
 }
 
 bool EchoService::init()
@@ -163,9 +163,9 @@ bool EchoService::init()
     service_node.protocol = BoostWeb::support_protocol_t::protocol_wsss;
     if (!m_web_manager.init(this, &service_node, 1, false, true, nullptr, nullptr, 1))
     {
-        return (false);
+        return false;
     }
-    return (true);
+    return true;
 }
 
 void EchoService::exit()
