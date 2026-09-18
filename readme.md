@@ -1,3 +1,5 @@
+
+
 # boost_web
 
 *boost_web is a simple web service (http(s)/websocket(s)) wrapper with C++11 while base on boost.beast*
@@ -468,17 +470,14 @@ the files *test/test_service.h* and *echo/echo_service.h* have show you how to u
              * and m_ws_connection_1.reset() been called there
              * the next operate will get a bomb
              */
-            m_ws_connection_1->send_buffer_fill("hello", 5);
+            m_ws_connection_1->send_buffer_fill(true, "hello", 5);
         }
         
         /* 2, right way to use smart pointer member variable */
         BoostWeb::WebsocketConnectionSharedPtr connection = m_ws_connection_1;
         if (!!connection)
         {
-            connection->send_buffer_fill("hello", 5);
+            connection->send_buffer_fill(true, "hello", 5);
         } 
     }
     ```
-
-    
-
